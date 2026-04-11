@@ -197,7 +197,7 @@ generate_claude_md() {
     ENV_VARS="See \`.env.local.example\` for required variables."
   else
     # Scan for process.env references
-    local FOUND_VARS=$(grep -rh 'process\.env\.\|os\.environ\|os\.getenv' --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.py" . 2>/dev/null | grep -oE '(process\.env\.([A-Z_]+)|os\.environ\[.([A-Z_]+).\]|os\.getenv\(.([A-Z_]+).\))' | sed 's/process\.env\.//;s/os\.environ\[.//;s/.\]//;s/os\.getenv(.//;s/.)//;' | sort -u | head -10)
+    local FOUND_VARS=$(grep -rh 'process\.env\.\|os\.environ\|os\.getenv' --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.py" --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist --exclude-dir=build --exclude-dir=__pycache__ --exclude-dir=.venv . 2>/dev/null | grep -oE '(process\.env\.([A-Z_]+)|os\.environ\[.([A-Z_]+).\]|os\.getenv\(.([A-Z_]+).\))' | sed 's/process\.env\.//;s/os\.environ\[.//;s/.\]//;s/os\.getenv(.//;s/.)//;' | sort -u | head -10)
     if [ -n "$FOUND_VARS" ]; then
       ENV_VARS="Detected environment variables:"
       for var in $FOUND_VARS; do
@@ -274,7 +274,7 @@ CLAUDEEOF
 
 generate_env_example() {
   # Scan for environment variable usage
-  local VARS=$(grep -rh 'process\.env\.' --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" . 2>/dev/null | grep -oE 'process\.env\.([A-Z_]+)' | sed 's/process\.env\.//' | sort -u)
+  local VARS=$(grep -rh 'process\.env\.' --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist --exclude-dir=build . 2>/dev/null | grep -oE 'process\.env\.([A-Z_]+)' | sed 's/process\.env\.//' | sort -u)
 
   if [ -n "$VARS" ]; then
     echo "# Environment Variables" > .env.example
