@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime (don't track current session pointer)
+.claude/sessions/.current-session
+
+# Don't track session logs in the framework repo itself
+# (these are generated per-project)
+.claude/sessions/*.md

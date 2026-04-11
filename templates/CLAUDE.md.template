@@ -1,0 +1,40 @@
+# {{PROJECT_NAME}}
+
+## Overview
+{{FRAMEWORK_DESC}} project using {{LANGUAGE_DESC}}.
+
+## Quick Start
+```bash
+{{INSTALL_CMD}}
+{{RUN_CMD}}
+```
+
+## Project Structure
+{{DIRECTORY_MAP}}
+
+## Environment Variables
+Copy `.env.example` to `.env.local` and fill in values.
+{{ENV_VARS}}
+
+## Conventions
+- Follow existing code patterns — search the codebase before creating new utilities
+- Keep components/modules small and focused
+- Use the project's existing styling approach
+- API routes should be thin wrappers — business logic belongs in dedicated modules
+
+## Common Mistakes to Avoid
+- Do not weaken linting or formatting configs to suppress errors — fix the source code
+- Do not commit console.log, debugger, or print() statements
+- Do not hardcode API keys, tokens, or secrets — use environment variables
+- Do not modify files in node_modules/, .next/, dist/, or build/
+- Do not create new utility functions without first checking if one already exists
+- Do not skip TypeScript types — avoid `any` unless absolutely necessary
+
+## Session Workflow
+- Changes are auto-tracked in `.claude/sessions/`
+- You'll be reminded to save checkpoints after significant changes
+- Review `PROJECT_LESSONS.md` at the start of each session for past corrections
+
+## References
+- `PROJECT_LESSONS.md` — Corrections and learnings from past sessions
+{{EXTRA_REFS}}
