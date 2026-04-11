@@ -163,6 +163,69 @@ install_framework() {
   else
     print_warn ".claude/architecture.json already exists — skipping"
   fi
+
+  # Generate hierarchical CLAUDE.md files for subdirectories (never overwrite)
+  generate_hierarchical_claude_md "$TEMP_DIR/framework"
+}
+
+# ---- Hierarchical CLAUDE.md Generation ----
+
+generate_hierarchical_claude_md() {
+  local FRAMEWORK_DIR="$1"
+  local TEMPLATES_DIR="$FRAMEWORK_DIR/templates/claude-md"
+  local COUNT=0
+
+  case "$FRAMEWORK" in
+    nextjs)
+      # Next.js App Router directories
+      if [ -d "app" ] && [ ! -f "app/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/app-nextjs.md" app/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "components" ] && [ ! -f "components/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/components.md" components/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "lib" ] && [ ! -f "lib/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/lib.md" lib/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "store" ] && [ ! -f "store/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/store.md" store/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "src/components" ] && [ ! -f "src/components/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/components.md" src/components/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "src/lib" ] && [ ! -f "src/lib/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/lib.md" src/lib/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      ;;
+    express|node|vite|create-react-app|gatsby|nuxt|svelte|astro)
+      # Generic JS/TS project
+      if [ -d "src/components" ] && [ ! -f "src/components/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/components.md" src/components/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "src/lib" ] && [ ! -f "src/lib/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/lib.md" src/lib/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "components" ] && [ ! -f "components/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/components.md" components/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "lib" ] && [ ! -f "lib/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/lib.md" lib/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      ;;
+    django|fastapi|flask|python)
+      # Python projects
+      if [ -d "src" ] && [ ! -f "src/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/src-python.md" src/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "app" ] && [ ! -f "app/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/src-python.md" app/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      ;;
+  esac
+
+  if [ "$COUNT" -gt 0 ]; then
+    print_step "Created: $COUNT subdirectory CLAUDE.md files (on-demand context)"
+  fi
 }
 
 # ---- CLAUDE.md Generation ----
