@@ -39,6 +39,12 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Do not skip TypeScript types — avoid `any` unless absolutely necessary
 - Do not put business logic in page.tsx or route.ts files
 
+## Communication Style
+- Write all commit messages, PR descriptions, and summaries in **plain language** that a non-technical person can understand.
+- Explain WHAT changed, WHY it matters, and WHAT it means for the project — not just technical details.
+- Use simple analogies when helpful. Avoid jargon. If you must use a technical term, explain it in parentheses.
+- Structure summaries with: "What changed" → "Why we did it" → "What this means for you"
+
 ## Session Workflow
 - Changes are auto-tracked in `.claude/sessions/`
 - You'll be reminded to save checkpoints after significant changes
