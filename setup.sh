@@ -117,10 +117,14 @@ install_framework() {
   }
 
   # Copy .claude/hooks/ (always overwrite — these are framework-managed)
-  mkdir -p .claude/hooks .claude/sessions
+  mkdir -p .claude/hooks .claude/sessions .claude/commands
   cp "$TEMP_DIR/framework/.claude/hooks/"*.sh .claude/hooks/
   chmod +x .claude/hooks/*.sh
-  print_step "Installed: .claude/hooks/ (11 automation scripts)"
+  print_step "Installed: .claude/hooks/ (13 automation scripts)"
+
+  # Copy .claude/commands/ (always overwrite — framework-managed)
+  cp "$TEMP_DIR/framework/.claude/commands/"*.md .claude/commands/
+  print_step "Installed: .claude/commands/ (/audit, /save, /share)"
 
   # Copy settings.json (overwrite on update, no-clobber on fresh install)
   if [ "$UPDATE_MODE" = "true" ]; then
