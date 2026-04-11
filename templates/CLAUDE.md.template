@@ -16,9 +16,17 @@
 Copy `.env.example` to `.env.local` and fill in values.
 {{ENV_VARS}}
 
+## Architecture Principles
+- **Separation of concerns** — Pages/routes handle UI composition only. Business logic goes in services or hooks.
+- **No duplication** — If logic exists in 2+ places, extract to a shared module.
+- **Consistent patterns** — Follow the existing structure. Same type of code goes in the same type of place.
+- **Types co-located** — Define types near the code that uses them. Shared types go in lib/types.
+- **Search before creating** — Always check if a utility, component, or pattern already exists before building a new one.
+- See `.claude/architecture.json` for specific rules and boundaries.
+
 ## Conventions
 - Follow existing code patterns — search the codebase before creating new utilities
-- Keep components/modules small and focused
+- Keep components/modules small and focused (max ~400 lines per file)
 - Use the project's existing styling approach
 - API routes should be thin wrappers — business logic belongs in dedicated modules
 
@@ -29,12 +37,15 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Do not modify files in node_modules/, .next/, dist/, or build/
 - Do not create new utility functions without first checking if one already exists
 - Do not skip TypeScript types — avoid `any` unless absolutely necessary
+- Do not put business logic in page.tsx or route.ts files
 
 ## Session Workflow
 - Changes are auto-tracked in `.claude/sessions/`
 - You'll be reminded to save checkpoints after significant changes
 - Review `PROJECT_LESSONS.md` at the start of each session for past corrections
+- Run `bash .claude/hooks/audit.sh` for a full architecture audit
 
 ## References
 - `PROJECT_LESSONS.md` — Corrections and learnings from past sessions
+- `.claude/architecture.json` — Architecture rules and boundaries
 {{EXTRA_REFS}}

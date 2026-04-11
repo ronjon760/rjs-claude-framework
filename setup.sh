@@ -151,6 +151,14 @@ install_framework() {
     generate_env_example
     print_step "Created: .env.example"
   fi
+
+  # Generate architecture.json (never overwrite)
+  if [ ! -f ".claude/architecture.json" ]; then
+    generate_architecture_config
+    print_step "Created: .claude/architecture.json (architecture rules)"
+  else
+    print_warn ".claude/architecture.json already exists — skipping"
+  fi
 }
 
 # ---- CLAUDE.md Generation ----
@@ -287,6 +295,137 @@ generate_env_example() {
     echo "# Environment Variables" > .env.example
     echo "# Copy this file to .env.local and fill in values" >> .env.example
   fi
+}
+
+# ---- Architecture Config Generation ----
+
+generate_architecture_config() {
+  local STRUCTURE="{}"
+
+  # Build structure rules based on detected stack
+  case "$FRAMEWORK" in
+    nextjs)
+      cat > .claude/architecture.json << 'ARCHEOF'
+{
+  "stack": "nextjs",
+  "rules": {
+    "max_file_lines": 400,
+    "max_function_lines": 50,
+    "no_business_logic_in_routes": true,
+    "no_duplicate_stores": true,
+    "types_colocated": true,
+    "consistent_naming": true
+  },
+  "naming": {
+    "components": "PascalCase (.tsx)",
+    "hooks": "use*.ts",
+    "utils": "camelCase (.ts)",
+    "stores": "camelCase (.ts)",
+    "pages": "page.tsx (Next.js convention)"
+  },
+  "boundaries": {
+    "app_routes": "Thin wrappers only — no business logic in route.ts or page.tsx beyond UI composition",
+    "components": "UI only — no direct fetch() calls, no business logic. Use hooks for data.",
+    "lib": "Shared utilities and services — cannot import from components or app/",
+    "store": "State management — cannot import from components or app/"
+  },
+  "structure": {
+    "app": "Routes and pages (App Router)",
+    "components": "Reusable UI components organized by category (ui/, forms/, layout/, cards/)",
+    "store": "Zustand state management stores",
+    "lib": "Utilities, services, types, constants",
+    "public": "Static assets"
+  }
+}
+ARCHEOF
+      ;;
+    express|node)
+      cat > .claude/architecture.json << 'ARCHEOF'
+{
+  "stack": "node",
+  "rules": {
+    "max_file_lines": 400,
+    "max_function_lines": 50,
+    "no_business_logic_in_routes": true,
+    "types_colocated": true,
+    "consistent_naming": true
+  },
+  "naming": {
+    "controllers": "camelCase (.ts)",
+    "services": "camelCase (.ts)",
+    "middleware": "camelCase (.ts)",
+    "models": "PascalCase (.ts)"
+  },
+  "boundaries": {
+    "routes": "Thin wrappers — delegate to controllers/services",
+    "controllers": "Request handling — delegate business logic to services",
+    "services": "Business logic — cannot import from routes or controllers",
+    "models": "Data access — cannot import from routes, controllers, or services"
+  },
+  "structure": {
+    "src/routes": "Express route definitions",
+    "src/controllers": "Request handlers",
+    "src/services": "Business logic",
+    "src/models": "Data models and database access",
+    "src/middleware": "Express middleware",
+    "src/utils": "Shared utilities"
+  }
+}
+ARCHEOF
+      ;;
+    django|fastapi|flask|python)
+      cat > .claude/architecture.json << 'ARCHEOF'
+{
+  "stack": "python",
+  "rules": {
+    "max_file_lines": 400,
+    "max_function_lines": 50,
+    "no_business_logic_in_routes": true,
+    "types_colocated": true,
+    "consistent_naming": true
+  },
+  "naming": {
+    "modules": "snake_case (.py)",
+    "classes": "PascalCase",
+    "functions": "snake_case",
+    "constants": "UPPER_SNAKE_CASE"
+  },
+  "boundaries": {
+    "views_routes": "Thin wrappers — delegate to services",
+    "services": "Business logic — cannot import from views/routes",
+    "models": "Data models — cannot import from views or services"
+  },
+  "structure": {
+    "app or src": "Main application code",
+    "services": "Business logic layer",
+    "models": "Data models",
+    "utils": "Shared utilities",
+    "tests": "Test files"
+  }
+}
+ARCHEOF
+      ;;
+    *)
+      # Generic fallback
+      cat > .claude/architecture.json << 'ARCHEOF'
+{
+  "stack": "generic",
+  "rules": {
+    "max_file_lines": 400,
+    "max_function_lines": 50,
+    "consistent_naming": true
+  },
+  "naming": {
+    "components": "PascalCase",
+    "utilities": "camelCase",
+    "constants": "UPPER_CASE"
+  },
+  "boundaries": {},
+  "structure": {}
+}
+ARCHEOF
+      ;;
+  esac
 }
 
 # ---- Git Setup ----
