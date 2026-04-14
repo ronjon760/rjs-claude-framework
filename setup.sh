@@ -4,7 +4,7 @@ set -e
 # ============================================================
 # RJ's Claude Framework — One-Command Installer
 # Usage: bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh)
-# Or:    bash setup.sh [--update]
+# Or:    bash setup.sh [--update] [--fdd]
 # ============================================================
 
 REPO_URL="https://github.com/ronjon760/rjs-claude-framework.git"
@@ -119,6 +119,67 @@ detect_stack() {
   [ "$HAS_PYTEST" = "true" ] && print_step "Found: pytest (test runner)"
   [ "$TEST_CMD" != "unknown" ] && [ "$HAS_VITEST" != "true" ] && [ "$HAS_JEST" != "true" ] && [ "$HAS_MOCHA" != "true" ] && [ "$HAS_PYTEST" != "true" ] && print_step "Found: test script ($TEST_CMD)"
   echo ""
+}
+
+# ---- FDD (Feature-Driven Development) ----
+
+FDD_ENABLED=false
+
+detect_fdd_candidate() {
+  # If --fdd was passed, enable unconditionally
+  if [ "$FDD_FLAG" = "true" ]; then
+    FDD_ENABLED=true
+    print_step "FDD enabled (via --fdd flag)"
+    return
+  fi
+
+  # Static HTML sites don't need FDD
+  if [ "$FRAMEWORK" = "static-html" ]; then
+    return
+  fi
+
+  # Suggest FDD based on project size metrics
+  if [ "$FDD_SUGGESTED" = "true" ]; then
+    print_warn "This project has ${SCREEN_PAGE_COUNT:-0} screens/pages and ${FILE_COUNT:-0} source files."
+    print_warn "Consider enabling Feature-Driven Development: bash setup.sh --fdd"
+    echo ""
+  fi
+}
+
+generate_fdd_structure() {
+  # Determine features directory based on stack
+  local FEATURES_DIR="src/features"
+  case "$FRAMEWORK" in
+    nextjs)
+      [ -d "src" ] && FEATURES_DIR="src/features" || FEATURES_DIR="features"
+      ;;
+    react-native-expo)
+      FEATURES_DIR="src/features"
+      ;;
+    django|fastapi|flask|python)
+      [ -d "app" ] && FEATURES_DIR="app/features" || FEATURES_DIR="features"
+      ;;
+    *)
+      [ -d "src" ] && FEATURES_DIR="src/features" || FEATURES_DIR="features"
+      ;;
+  esac
+
+  # Create features directory if it doesn't exist
+  if [ ! -d "$FEATURES_DIR" ]; then
+    mkdir -p "$FEATURES_DIR"
+    print_step "Created: $FEATURES_DIR/"
+  fi
+
+  # Copy features CLAUDE.md
+  if [ ! -f "$FEATURES_DIR/CLAUDE.md" ]; then
+    if [ -f "$TEMP_DIR/framework/templates/claude-md/features.md" ]; then
+      cp "$TEMP_DIR/framework/templates/claude-md/features.md" "$FEATURES_DIR/CLAUDE.md"
+      print_step "Created: $FEATURES_DIR/CLAUDE.md (FDD guide)"
+    fi
+  fi
+
+  # Store the features dir for use in architecture config
+  CONFIGURED_FEATURES_DIR="$FEATURES_DIR"
 }
 
 # ---- Static HTML Settings ----
@@ -284,6 +345,12 @@ install_framework() {
     print_warn ".claude/architecture.json already exists — skipping"
   fi
 
+  # Generate FDD structure if enabled
+  if [ "$FDD_ENABLED" = "true" ]; then
+    generate_fdd_structure
+    print_step "Configured: Feature-Driven Development (FDD)"
+  fi
+
   # Generate hierarchical CLAUDE.md files for subdirectories (never overwrite)
   generate_hierarchical_claude_md "$TEMP_DIR/framework"
 }
@@ -318,6 +385,18 @@ generate_hierarchical_claude_md() {
       fi
       if [ -d "src/lib" ] && [ ! -f "src/lib/CLAUDE.md" ]; then
         cp "$TEMPLATES_DIR/lib.md" src/lib/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      ;;
+    react-native-expo)
+      # React Native (Expo) directories
+      if [ -d "src/components" ] && [ ! -f "src/components/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/components.md" src/components/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ -d "src/lib" ] && [ ! -f "src/lib/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/lib.md" src/lib/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
+      fi
+      if [ "$FDD_ENABLED" = "true" ] && [ -d "src/features" ] && [ ! -f "src/features/CLAUDE.md" ]; then
+        cp "$TEMPLATES_DIR/features.md" src/features/CLAUDE.md 2>/dev/null && COUNT=$((COUNT + 1))
       fi
       ;;
     express|node|vite|create-react-app|gatsby|nuxt|svelte|astro)
@@ -368,6 +447,7 @@ generate_claude_md() {
     fastapi) FRAMEWORK_DESC="FastAPI" ;;
     flask) FRAMEWORK_DESC="Flask" ;;
     static-html) FRAMEWORK_DESC="Static HTML/CSS" ;;
+    react-native-expo) FRAMEWORK_DESC="React Native (Expo)" ;;
     *) FRAMEWORK_DESC="$FRAMEWORK" ;;
   esac
 
@@ -422,6 +502,35 @@ generate_claude_md() {
       -e "s|{{RUN_CMD}}|${RUN_CMD:-npm run dev}|g" \
       "$TEMPLATE" > CLAUDE.md
 
+    # Build FDD section if enabled
+    local FDD_SECTION=""
+    if [ "$FDD_ENABLED" = "true" ]; then
+      local FDD_DIR="${CONFIGURED_FEATURES_DIR:-src/features}"
+      FDD_SECTION="
+## Feature-Driven Development (FDD)
+
+This project uses vertical feature slicing. Each feature in \`$FDD_DIR/\` is self-contained.
+
+### Required (every feature)
+- \`components/\` — UI for this feature
+- \`hooks/\` — Data fetching and state logic
+- \`types.ts\` — TypeScript types
+- \`index.ts\` — Public API
+- \`QUICK_REF.md\` — Feature documentation
+
+### Recommended (when files grow past ~200 lines)
+- \`services/\` or \`api/\` — Extract API calls
+- \`handlers/\` — Extract event handlers from components
+- \`utils/\` — Feature-specific helpers
+
+### Rules
+- Features CANNOT import from other features. Shared code goes in \`lib/\`.
+- Business logic belongs in hooks/ or services/, not in screen/page components.
+- Every feature must have a QUICK_REF.md.
+- Use \`/feature <name>\` to scaffold a new feature.
+- Use \`/quickref <name>\` to generate documentation for an existing feature."
+    fi
+
     # Replace multiline placeholders
     python3 -c "
 import sys
@@ -429,6 +538,7 @@ content = open('CLAUDE.md').read()
 content = content.replace('{{DIRECTORY_MAP}}', '''$(echo -e "$DIRECTORY_MAP")''')
 content = content.replace('{{ENV_VARS}}', '''$(echo -e "$ENV_VARS")''')
 content = content.replace('{{EXTRA_REFS}}', '''$(echo -e "$EXTRA_REFS")''')
+content = content.replace('{{FDD_SECTION}}', '''$(echo -e "$FDD_SECTION")''')
 open('CLAUDE.md', 'w').write(content)
 " 2>/dev/null || true
 
@@ -495,6 +605,9 @@ content = content.replace(old_conv, new_conv)
 old_env = '''## Environment Variables
 Copy \`.env.example\` to \`.env.local\` and fill in values.'''
 content = content.replace(old_env, '')
+
+# Remove FDD placeholder for static sites
+content = content.replace('{{FDD_SECTION}}', '')
 
 open('CLAUDE.md', 'w').write(content)
 " 2>/dev/null || true
@@ -622,7 +735,7 @@ generate_architecture_config() {
   # Build structure rules based on detected stack
   case "$FRAMEWORK" in
     nextjs)
-      cat > .claude/architecture.json << 'ARCHEOF'
+      cat > .claude/architecture.json << ARCHEOF
 {
   "stack": "nextjs",
   "rules": {
@@ -652,12 +765,39 @@ generate_architecture_config() {
     "store": "Zustand state management stores",
     "lib": "Utilities, services, types, constants",
     "public": "Static assets"
+  },
+  "fdd": {
+    "enabled": ${FDD_ENABLED},
+    "features_dir": "${CONFIGURED_FEATURES_DIR:-src/features}",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "components": "UI components for this feature",
+      "hooks": "Custom hooks for this feature",
+      "types.ts": "TypeScript types",
+      "index.ts": "Barrel export (public API)",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "api": "API/service calls (when logic grows)",
+      "utils": "Feature-specific utilities",
+      "handlers": "Event handlers extracted from components"
+    }
   }
 }
 ARCHEOF
       ;;
     express|node)
-      cat > .claude/architecture.json << 'ARCHEOF'
+      cat > .claude/architecture.json << ARCHEOF
 {
   "stack": "node",
   "rules": {
@@ -686,12 +826,39 @@ ARCHEOF
     "src/models": "Data models and database access",
     "src/middleware": "Express middleware",
     "src/utils": "Shared utilities"
+  },
+  "fdd": {
+    "enabled": ${FDD_ENABLED},
+    "features_dir": "${CONFIGURED_FEATURES_DIR:-src/features}",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "components": "UI components for this feature",
+      "hooks": "Custom hooks for this feature",
+      "types.ts": "TypeScript types",
+      "index.ts": "Barrel export (public API)",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "api": "API/service calls (when logic grows)",
+      "utils": "Feature-specific utilities",
+      "handlers": "Event handlers extracted from components"
+    }
   }
 }
 ARCHEOF
       ;;
     django|fastapi|flask|python)
-      cat > .claude/architecture.json << 'ARCHEOF'
+      cat > .claude/architecture.json << ARCHEOF
 {
   "stack": "python",
   "rules": {
@@ -718,6 +885,99 @@ ARCHEOF
     "models": "Data models",
     "utils": "Shared utilities",
     "tests": "Test files"
+  },
+  "fdd": {
+    "enabled": ${FDD_ENABLED},
+    "features_dir": "${CONFIGURED_FEATURES_DIR:-features}",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "views": "View functions/classes for this feature",
+      "services": "Business logic for this feature",
+      "models": "Data models for this feature",
+      "types.py": "Type definitions",
+      "__init__.py": "Public API",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "utils": "Feature-specific utilities",
+      "serializers": "Data serialization"
+    }
+  }
+}
+ARCHEOF
+      ;;
+    react-native-expo)
+      cat > .claude/architecture.json << ARCHEOF
+{
+  "stack": "react-native-expo",
+  "rules": {
+    "max_file_lines": 400,
+    "max_function_lines": 50,
+    "no_business_logic_in_screens": true,
+    "no_duplicate_stores": true,
+    "types_colocated": true,
+    "consistent_naming": true
+  },
+  "naming": {
+    "screens": "PascalCase ending in Screen (.tsx)",
+    "components": "PascalCase (.tsx)",
+    "hooks": "use*.ts",
+    "lib_modules": "camelCase (.ts)",
+    "tasks": "camelCase (.ts)",
+    "context": "PascalCase ending in Context (.tsx)"
+  },
+  "boundaries": {
+    "screens": "UI composition only — delegate to lib/ or feature hooks",
+    "components": "Reusable UI only — no direct Supabase/API calls, no business logic",
+    "lib": "Shared utilities and services — cannot import from screens/ or components/",
+    "navigation": "Route configuration only",
+    "context": "Thin wrappers around state"
+  },
+  "structure": {
+    "src/screens": "Screen components (one per app screen)",
+    "src/components": "Reusable UI components",
+    "src/lib": "Business logic, services, utilities",
+    "src/navigation": "React Navigation configuration",
+    "src/context": "React Context providers",
+    "src/tasks": "Background tasks",
+    "src/theme": "Theme constants"
+  },
+  "fdd": {
+    "enabled": ${FDD_ENABLED},
+    "features_dir": "${CONFIGURED_FEATURES_DIR:-src/features}",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "components": "UI components for this feature",
+      "hooks": "Custom hooks for this feature",
+      "types.ts": "TypeScript types",
+      "index.ts": "Barrel export (public API)",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "api": "API/service calls (when logic grows)",
+      "utils": "Feature-specific utilities",
+      "handlers": "Event handlers extracted from components"
+    }
   }
 }
 ARCHEOF
@@ -748,7 +1008,7 @@ ARCHEOF
       ;;
     *)
       # Generic fallback
-      cat > .claude/architecture.json << 'ARCHEOF'
+      cat > .claude/architecture.json << ARCHEOF
 {
   "stack": "generic",
   "rules": {
@@ -762,7 +1022,34 @@ ARCHEOF
     "constants": "UPPER_CASE"
   },
   "boundaries": {},
-  "structure": {}
+  "structure": {},
+  "fdd": {
+    "enabled": ${FDD_ENABLED},
+    "features_dir": "${CONFIGURED_FEATURES_DIR:-src/features}",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "components": "UI components for this feature",
+      "hooks": "Custom hooks for this feature",
+      "types.ts": "TypeScript types",
+      "index.ts": "Barrel export (public API)",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "api": "API/service calls (when logic grows)",
+      "utils": "Feature-specific utilities",
+      "handlers": "Event handlers extracted from components"
+    }
+  }
 }
 ARCHEOF
       ;;
@@ -859,11 +1146,19 @@ install_deps() {
 
 main() {
   local UPDATE_MODE=false
-  [ "$1" = "--update" ] && UPDATE_MODE=true
+  FDD_FLAG=false
+
+  for arg in "$@"; do
+    case "$arg" in
+      --update) UPDATE_MODE=true ;;
+      --fdd) FDD_FLAG=true ;;
+    esac
+  done
 
   print_header
   check_prerequisites
   detect_stack
+  detect_fdd_candidate
 
   if [ "$UPDATE_MODE" = "true" ]; then
     echo -e "${BOLD}Updating framework...${NC}"

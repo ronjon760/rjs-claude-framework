@@ -53,6 +53,8 @@ if [ -f "$PROJECT_DIR/package.json" ]; then
     FRAMEWORK="svelte"
   elif grep -q '"astro"' "$PROJECT_DIR/package.json" 2>/dev/null; then
     FRAMEWORK="astro"
+  elif grep -q '"expo"' "$PROJECT_DIR/package.json" 2>/dev/null || grep -q '"react-native"' "$PROJECT_DIR/package.json" 2>/dev/null; then
+    FRAMEWORK="react-native-expo"
   else
     FRAMEWORK="node"
   fi
@@ -186,6 +188,32 @@ if [ "$LANGUAGE" = "unknown" ]; then
   fi
 fi
 
+# --- Project Size Metrics (for FDD suggestion) ---
+
+FILE_COUNT=0
+SCREEN_PAGE_COUNT=0
+LARGEST_FILE_LINES=0
+FDD_SUGGESTED=false
+
+# Count source files
+if [ "$LANGUAGE" != "unknown" ] && [ "$LANGUAGE" != "html" ]; then
+  FILE_COUNT=$(find "$PROJECT_DIR" -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" 2>/dev/null | grep -vE '(node_modules|\.next|dist|build|__pycache__|\.venv|\.expo)' | wc -l | tr -d ' ')
+
+  # Count screens/pages
+  SCREEN_PAGE_COUNT=$(find "$PROJECT_DIR" -name "*Screen.tsx" -o -name "*Screen.jsx" -o -name "page.tsx" -o -name "page.jsx" 2>/dev/null | grep -vE '(node_modules|\.next|dist|build)' | wc -l | tr -d ' ')
+
+  # Find largest file
+  for f in $(find "$PROJECT_DIR" -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" 2>/dev/null | grep -vE '(node_modules|\.next|dist|build|__pycache__|\.venv|\.expo)'); do
+    LINES=$(wc -l < "$f" 2>/dev/null | tr -d ' ')
+    [ "$LINES" -gt "$LARGEST_FILE_LINES" ] && LARGEST_FILE_LINES=$LINES
+  done
+
+  # Suggest FDD if project is large enough
+  if [ "$SCREEN_PAGE_COUNT" -gt 5 ] || [ "$LARGEST_FILE_LINES" -gt 600 ] || [ "$FILE_COUNT" -gt 30 ]; then
+    FDD_SUGGESTED=true
+  fi
+fi
+
 # --- Output ---
 
 echo "LANGUAGE='$LANGUAGE'"
@@ -206,3 +234,7 @@ echo "TEST_CMD='$TEST_CMD'"
 echo "TEST_COVERAGE_CMD='$TEST_COVERAGE_CMD'"
 echo "RUN_CMD='$RUN_CMD'"
 echo "INSTALL_CMD='$INSTALL_CMD'"
+echo "FILE_COUNT='$FILE_COUNT'"
+echo "SCREEN_PAGE_COUNT='$SCREEN_PAGE_COUNT'"
+echo "LARGEST_FILE_LINES='$LARGEST_FILE_LINES'"
+echo "FDD_SUGGESTED='$FDD_SUGGESTED'"

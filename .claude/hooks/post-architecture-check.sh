@@ -116,6 +116,37 @@ if echo "$FILE_PATH" | grep -qE '/components/.*\.(tsx|jsx)$'; then
 fi
 
 # ──────────────────────────────────────
+# CHECK 8: Cross-feature imports (FDD)
+# ──────────────────────────────────────
+if [ -f "$ARCH_CONFIG" ] && grep -q '"fdd"' "$ARCH_CONFIG" && grep -q '"enabled"[[:space:]]*:[[:space:]]*true' "$ARCH_CONFIG"; then
+  FEATURES_DIR=$(grep -o '"features_dir"[[:space:]]*:[[:space:]]*"[^"]*"' "$ARCH_CONFIG" | head -1 | sed 's/.*"features_dir"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
+  [ -z "$FEATURES_DIR" ] && FEATURES_DIR="src/features"
+
+  if echo "$FILE_PATH" | grep -q "$FEATURES_DIR/"; then
+    CURRENT_FEATURE=$(echo "$FILE_PATH" | sed "s|.*$FEATURES_DIR/||" | cut -d'/' -f1)
+
+    if [ -n "$CURRENT_FEATURE" ]; then
+      CROSS_IMPORTS=$(grep -nE "from.*['\"].*features/" "$FILE_PATH" 2>/dev/null | grep -v "features/$CURRENT_FEATURE" | wc -l | tr -d ' ')
+      if [ "$CROSS_IMPORTS" -gt 0 ]; then
+        WARNINGS="${WARNINGS}\nFDD: $(basename "$FILE_PATH") imports from another feature ($CROSS_IMPORTS cross-feature import(s)). Features must be independent — move shared code to lib/."
+      fi
+    fi
+  fi
+fi
+
+# ──────────────────────────────────────
+# CHECK 9: Business logic in screens (FDD)
+# ──────────────────────────────────────
+if [ -f "$ARCH_CONFIG" ] && grep -q '"enabled"[[:space:]]*:[[:space:]]*true' "$ARCH_CONFIG"; then
+  if echo "$FILE_PATH" | grep -qE '(Screen\.tsx|Screen\.jsx|page\.tsx|page\.jsx)$'; then
+    LOGIC_LINES=$(grep -cvE '^\s*(import |export |//|/\*|\*|$|\}|{|return |<|style|const styles)' "$FILE_PATH" 2>/dev/null || echo 0)
+    if [ "$LOGIC_LINES" -gt 50 ]; then
+      WARNINGS="${WARNINGS}\nFDD: $(basename "$FILE_PATH") has $LOGIC_LINES lines of business logic. Extract to a feature's hooks/ or services/ directory."
+    fi
+  fi
+fi
+
+# ──────────────────────────────────────
 # Output warnings
 # ──────────────────────────────────────
 if [ -n "$WARNINGS" ]; then

@@ -23,6 +23,7 @@ Copy `.env.example` to `.env.local` and fill in values.
 - **Types co-located** — Define types near the code that uses them. Shared types go in lib/types.
 - **Search before creating** — Always check if a utility, component, or pattern already exists before building a new one.
 - See `.claude/architecture.json` for specific rules and boundaries.
+{{FDD_SECTION}}
 
 ## Conventions
 - Follow existing code patterns — search the codebase before creating new utilities
@@ -48,6 +49,8 @@ Copy `.env.example` to `.env.local` and fill in values.
 ## Commands
 - `/test` — Write and run tests for your code (tests first, then implementation)
 - `/audit` — Check the project for code quality and architecture issues
+- `/feature <name>` — Scaffold a new feature folder with FDD structure
+- `/quickref <name>` — Generate or update documentation for a feature
 - `/save` — Save your work (commits and pushes to GitHub)
 - `/share` — Share your work for review (creates a pull request)
 

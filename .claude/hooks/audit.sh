@@ -308,6 +308,63 @@ fi
 [ "$BOUNDARY_ISSUES" -eq 0 ] && ok "Import boundaries respected"
 
 # ──────────────────────────────────────────
+# 11. FDD COMPLIANCE
+# ──────────────────────────────────────────
+if [ -f "$ARCH_CONFIG" ] && grep -q '"fdd"' "$ARCH_CONFIG" && grep -q '"enabled"[[:space:]]*:[[:space:]]*true' "$ARCH_CONFIG"; then
+  section "FDD Compliance"
+
+  FEATURES_DIR=$(grep -o '"features_dir"[[:space:]]*:[[:space:]]*"[^"]*"' "$ARCH_CONFIG" | head -1 | sed 's/.*"features_dir"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//')
+  [ -z "$FEATURES_DIR" ] && FEATURES_DIR="src/features"
+
+  if [ -d "$FEATURES_DIR" ]; then
+    FDD_ISSUES=0
+    FEATURE_COUNT=0
+
+    for feature_dir in "$FEATURES_DIR"/*/; do
+      [ ! -d "$feature_dir" ] && continue
+      FEATURE_NAME=$(basename "$feature_dir")
+      FEATURE_COUNT=$((FEATURE_COUNT + 1))
+
+      # Missing QUICK_REF.md
+      [ ! -f "$feature_dir/QUICK_REF.md" ] && warn "Feature '$FEATURE_NAME' missing QUICK_REF.md" && FDD_ISSUES=$((FDD_ISSUES + 1))
+
+      # Missing index.ts
+      [ ! -f "$feature_dir/index.ts" ] && [ ! -f "$feature_dir/index.tsx" ] && warn "Feature '$FEATURE_NAME' missing index.ts (barrel export)" && FDD_ISSUES=$((FDD_ISSUES + 1))
+
+      # Missing types file
+      [ ! -f "$feature_dir/types.ts" ] && [ ! -f "$feature_dir/types.py" ] && warn "Feature '$FEATURE_NAME' missing types file" && FDD_ISSUES=$((FDD_ISSUES + 1))
+
+      # Oversized files (recommended tier)
+      for file in $(find "$feature_dir" -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" 2>/dev/null); do
+        [ ! -f "$file" ] && continue
+        FLINES=$(wc -l < "$file" | tr -d ' ')
+        [ "$FLINES" -gt 200 ] && warn "Feature '$FEATURE_NAME': $(basename "$file") is $FLINES lines — consider extracting to services/ or handlers/"
+      done
+    done
+
+    if [ "$FEATURE_COUNT" -eq 0 ]; then
+      warn "FDD enabled but no features found in '$FEATURES_DIR/' — run /feature to create your first feature"
+    elif [ "$FDD_ISSUES" -eq 0 ]; then
+      ok "All $FEATURE_COUNT feature(s) comply with FDD structure"
+    fi
+  else
+    warn "FDD enabled but '$FEATURES_DIR' directory not found — run /feature to scaffold your first feature"
+  fi
+
+  # Screen/page business logic check
+  section "Screen/Page Business Logic (FDD)"
+  SCREEN_ISSUES=0
+  for screen in $(find . -name "*Screen.tsx" -o -name "*Screen.jsx" 2>/dev/null | grep -vE '(node_modules|\.next|dist|build)'); do
+    SLINES=$(wc -l < "$screen" | tr -d ' ')
+    if [ "$SLINES" -gt 300 ]; then
+      issue "$screen — $SLINES lines (move logic to feature hooks/services)"
+      SCREEN_ISSUES=$((SCREEN_ISSUES + 1))
+    fi
+  done
+  [ "$SCREEN_ISSUES" -eq 0 ] && ok "Screen files are appropriately sized"
+fi
+
+# ──────────────────────────────────────────
 # SUMMARY
 # ──────────────────────────────────────────
 echo ""

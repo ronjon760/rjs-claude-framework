@@ -22,5 +22,32 @@
     "components_can_import": ["lib", "store"],
     "lib_cannot_import": ["components", "features", "app"]
   },
-  "structure": {}
+  "structure": {},
+  "fdd": {
+    "enabled": false,
+    "features_dir": "src/features",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "components": "UI components for this feature",
+      "hooks": "Custom hooks for this feature",
+      "types.ts": "TypeScript types",
+      "index.ts": "Barrel export (public API)",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "api": "API/service calls (when logic grows)",
+      "utils": "Feature-specific utilities",
+      "handlers": "Event handlers extracted from components"
+    }
+  }
 }
