@@ -43,7 +43,7 @@ bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/
 ```
 
 The setup script automatically:
-1. Detects your tech stack (Next.js, React, Express, Python, etc.)
+1. Detects your tech stack (Next.js, React, Express, Python, static HTML, etc.)
 2. Installs the appropriate hooks and settings
 3. Generates a `CLAUDE.md` tailored to your project
 4. Installs missing dev tools (Prettier, etc.)
@@ -64,6 +64,7 @@ Updates hook scripts and settings without overwriting your `CLAUDE.md`, `PROJECT
 | TypeScript (Next.js, React, Node) | Prettier | ESLint | tsc |
 | JavaScript | Prettier | ESLint | — |
 | Python | Ruff or Black | Ruff | mypy |
+| HTML/CSS (Static sites) | — | — | — |
 | Mixed JS/TS + Python | Both | Both | Both |
 
 ## Daily Workflow

@@ -17,6 +17,12 @@ HAS_BIOME=false
 HAS_RUFF=false
 HAS_BLACK=false
 HAS_MYPY=false
+HAS_JEST=false
+HAS_VITEST=false
+HAS_MOCHA=false
+HAS_PYTEST=false
+TEST_CMD="unknown"
+TEST_COVERAGE_CMD="unknown"
 RUN_CMD="unknown"
 INSTALL_CMD="unknown"
 
@@ -85,6 +91,30 @@ if [ -f "$PROJECT_DIR/package.json" ]; then
   if [ -f "$PROJECT_DIR/node_modules/.bin/biome" ] || grep -q '"@biomejs/biome"' "$PROJECT_DIR/package.json" 2>/dev/null; then
     HAS_BIOME=true
   fi
+
+  # Test framework detection
+  if [ -f "$PROJECT_DIR/node_modules/.bin/vitest" ] || grep -q '"vitest"' "$PROJECT_DIR/package.json" 2>/dev/null; then
+    HAS_VITEST=true
+    TEST_CMD="npx vitest run"
+    TEST_COVERAGE_CMD="npx vitest run --coverage"
+  elif [ -f "$PROJECT_DIR/node_modules/.bin/jest" ] || grep -q '"jest"' "$PROJECT_DIR/package.json" 2>/dev/null; then
+    HAS_JEST=true
+    TEST_CMD="npx jest"
+    TEST_COVERAGE_CMD="npx jest --coverage"
+  elif [ -f "$PROJECT_DIR/node_modules/.bin/mocha" ] || grep -q '"mocha"' "$PROJECT_DIR/package.json" 2>/dev/null; then
+    HAS_MOCHA=true
+    TEST_CMD="npx mocha"
+    TEST_COVERAGE_CMD="npx c8 mocha"
+  fi
+
+  # Check for test script in package.json as fallback
+  if [ "$TEST_CMD" = "unknown" ] && grep -q '"test"' "$PROJECT_DIR/package.json" 2>/dev/null; then
+    local TEST_SCRIPT=$(grep '"test"' "$PROJECT_DIR/package.json" 2>/dev/null | head -1)
+    if ! echo "$TEST_SCRIPT" | grep -q 'no test specified'; then
+      TEST_CMD="$PACKAGE_MANAGER test"
+      [ "$PACKAGE_MANAGER" = "npm" ] && TEST_CMD="npm test"
+    fi
+  fi
 fi
 
 # Python detection
@@ -127,19 +157,52 @@ if [ -f "$PROJECT_DIR/pyproject.toml" ] || [ -f "$PROJECT_DIR/requirements.txt" 
   command -v ruff &>/dev/null && HAS_RUFF=true
   command -v black &>/dev/null && HAS_BLACK=true
   command -v mypy &>/dev/null && HAS_MYPY=true
+
+  # Python test framework detection
+  if command -v pytest &>/dev/null || grep -rq "pytest" "$PROJECT_DIR/pyproject.toml" "$PROJECT_DIR/requirements.txt" 2>/dev/null; then
+    HAS_PYTEST=true
+    if [ "$TEST_CMD" = "unknown" ]; then
+      TEST_CMD="pytest"
+      TEST_COVERAGE_CMD="pytest --cov --cov-report=term-missing"
+    fi
+  elif [ "$TEST_CMD" = "unknown" ]; then
+    # Fallback to unittest
+    if [ -d "$PROJECT_DIR/tests" ] || [ -d "$PROJECT_DIR/test" ]; then
+      TEST_CMD="python -m unittest discover"
+    fi
+  fi
+fi
+
+# Static HTML detection
+# Triggers when: .html files exist at root, no package.json, no Python markers
+if [ "$LANGUAGE" = "unknown" ]; then
+  HTML_FILES=$(ls "$PROJECT_DIR"/*.html 2>/dev/null)
+  if [ -n "$HTML_FILES" ]; then
+    LANGUAGE="html"
+    FRAMEWORK="static-html"
+    PACKAGE_MANAGER="none"
+    INSTALL_CMD="# No dependencies — static site"
+    RUN_CMD="open index.html  # or: python3 -m http.server 8000"
+  fi
 fi
 
 # --- Output ---
 
-echo "LANGUAGE=$LANGUAGE"
-echo "FRAMEWORK=$FRAMEWORK"
-echo "PACKAGE_MANAGER=$PACKAGE_MANAGER"
-echo "HAS_TYPESCRIPT=$HAS_TYPESCRIPT"
-echo "HAS_PRETTIER=$HAS_PRETTIER"
-echo "HAS_ESLINT=$HAS_ESLINT"
-echo "HAS_BIOME=$HAS_BIOME"
-echo "HAS_RUFF=$HAS_RUFF"
-echo "HAS_BLACK=$HAS_BLACK"
-echo "HAS_MYPY=$HAS_MYPY"
-echo "RUN_CMD=$RUN_CMD"
-echo "INSTALL_CMD=$INSTALL_CMD"
+echo "LANGUAGE='$LANGUAGE'"
+echo "FRAMEWORK='$FRAMEWORK'"
+echo "PACKAGE_MANAGER='$PACKAGE_MANAGER'"
+echo "HAS_TYPESCRIPT='$HAS_TYPESCRIPT'"
+echo "HAS_PRETTIER='$HAS_PRETTIER'"
+echo "HAS_ESLINT='$HAS_ESLINT'"
+echo "HAS_BIOME='$HAS_BIOME'"
+echo "HAS_RUFF='$HAS_RUFF'"
+echo "HAS_BLACK='$HAS_BLACK'"
+echo "HAS_MYPY='$HAS_MYPY'"
+echo "HAS_JEST='$HAS_JEST'"
+echo "HAS_VITEST='$HAS_VITEST'"
+echo "HAS_MOCHA='$HAS_MOCHA'"
+echo "HAS_PYTEST='$HAS_PYTEST'"
+echo "TEST_CMD='$TEST_CMD'"
+echo "TEST_COVERAGE_CMD='$TEST_COVERAGE_CMD'"
+echo "RUN_CMD='$RUN_CMD'"
+echo "INSTALL_CMD='$INSTALL_CMD'"

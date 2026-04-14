@@ -10,6 +10,9 @@ set -e
 REPO_URL="https://github.com/ronjon760/rjs-claude-framework.git"
 FRAMEWORK_VERSION="1.0.0"
 
+# Resolve the directory where this script lives (for local installs)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -59,10 +62,12 @@ detect_stack() {
   echo -e "${BOLD}Scanning project...${NC}"
 
   # Source the detect-stack utility if running from repo
-  # Otherwise, download it to temp
+  # Check: CWD lib/, script's own lib/, or temp clone lib/
   if [ -f "lib/detect-stack.sh" ]; then
     eval "$(bash lib/detect-stack.sh .)"
-  elif [ -f "$TEMP_DIR/framework/lib/detect-stack.sh" ]; then
+  elif [ -f "$SCRIPT_DIR/lib/detect-stack.sh" ]; then
+    eval "$(bash "$SCRIPT_DIR/lib/detect-stack.sh" .)"
+  elif [ -n "$TEMP_DIR" ] && [ -f "$TEMP_DIR/framework/lib/detect-stack.sh" ]; then
     eval "$(bash "$TEMP_DIR/framework/lib/detect-stack.sh" .)"
   else
     # Inline minimal detection
@@ -87,6 +92,17 @@ detect_stack() {
       [ "$LANGUAGE" != "unknown" ] && LANGUAGE="${LANGUAGE}+python" || LANGUAGE="python"
       [ "$FRAMEWORK" = "unknown" ] && FRAMEWORK="python"
     fi
+    # Static HTML detection (inline fallback)
+    if [ "$LANGUAGE" = "unknown" ]; then
+      HTML_FILES=$(ls *.html 2>/dev/null)
+      if [ -n "$HTML_FILES" ]; then
+        LANGUAGE="html"
+        FRAMEWORK="static-html"
+        PACKAGE_MANAGER="none"
+        INSTALL_CMD="# No dependencies — static site"
+        RUN_CMD="open index.html  # or: python3 -m http.server 8000"
+      fi
+    fi
   fi
 
   [ "$LANGUAGE" != "unknown" ] && print_step "Detected: $FRAMEWORK ($LANGUAGE)" || print_warn "Could not auto-detect stack"
@@ -97,7 +113,103 @@ detect_stack() {
     fi
   }
   [ "$HAS_ESLINT" = "true" ] && print_step "Found: ESLint"
+  [ "$HAS_VITEST" = "true" ] && print_step "Found: Vitest (test runner)"
+  [ "$HAS_JEST" = "true" ] && print_step "Found: Jest (test runner)"
+  [ "$HAS_MOCHA" = "true" ] && print_step "Found: Mocha (test runner)"
+  [ "$HAS_PYTEST" = "true" ] && print_step "Found: pytest (test runner)"
+  [ "$TEST_CMD" != "unknown" ] && [ "$HAS_VITEST" != "true" ] && [ "$HAS_JEST" != "true" ] && [ "$HAS_MOCHA" != "true" ] && [ "$HAS_PYTEST" != "true" ] && print_step "Found: test script ($TEST_CMD)"
   echo ""
+}
+
+# ---- Static HTML Settings ----
+
+generate_static_html_settings() {
+  cat > .claude/settings.json << 'SETTINGSEOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-init.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-security-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-config-protect.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-commit-quality.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-console-warn.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-session-track.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/stop-milestone.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/stop-notify.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+SETTINGSEOF
 }
 
 # ---- File Installation ----
@@ -107,30 +219,38 @@ install_framework() {
 
   echo -e "${BOLD}Setting up framework...${NC}"
 
-  # Clone framework to temp dir
+  # Use local framework directory if available, otherwise clone from remote
   TEMP_DIR=$(mktemp -d)
   trap "rm -rf $TEMP_DIR" EXIT
 
-  git clone --depth 1 "$REPO_URL" "$TEMP_DIR/framework" 2>/dev/null || {
-    print_error "Failed to download framework. Check your internet connection."
-    exit 1
-  }
+  if [ -d "$SCRIPT_DIR/.claude/hooks" ] && [ -f "$SCRIPT_DIR/lib/detect-stack.sh" ]; then
+    # Running from a local copy of the framework
+    cp -r "$SCRIPT_DIR" "$TEMP_DIR/framework"
+    print_step "Using local framework from: $SCRIPT_DIR"
+  else
+    git clone --depth 1 "$REPO_URL" "$TEMP_DIR/framework" 2>/dev/null || {
+      print_error "Failed to download framework. Check your internet connection."
+      exit 1
+    }
+  fi
 
   # Copy .claude/hooks/ (always overwrite — these are framework-managed)
   mkdir -p .claude/hooks .claude/sessions .claude/commands
   cp "$TEMP_DIR/framework/.claude/hooks/"*.sh .claude/hooks/
   chmod +x .claude/hooks/*.sh
-  print_step "Installed: .claude/hooks/ (13 automation scripts)"
+  print_step "Installed: .claude/hooks/ (14 automation scripts)"
 
   # Copy .claude/commands/ (always overwrite — framework-managed)
   cp "$TEMP_DIR/framework/.claude/commands/"*.md .claude/commands/
-  print_step "Installed: .claude/commands/ (/audit, /save, /share)"
+  print_step "Installed: .claude/commands/ (/audit, /save, /share, /test)"
 
-  # Copy settings.json (overwrite on update, no-clobber on fresh install)
-  if [ "$UPDATE_MODE" = "true" ]; then
-    cp "$TEMP_DIR/framework/.claude/settings.json" .claude/settings.json
-  else
-    cp -n "$TEMP_DIR/framework/.claude/settings.json" .claude/settings.json 2>/dev/null || true
+  # Copy/generate settings.json (overwrite on update, no-clobber on fresh install)
+  if [ "$UPDATE_MODE" = "true" ] || [ ! -f ".claude/settings.json" ]; then
+    if [ "$FRAMEWORK" = "static-html" ]; then
+      generate_static_html_settings
+    else
+      cp "$TEMP_DIR/framework/.claude/settings.json" .claude/settings.json
+    fi
   fi
   print_step "Installed: .claude/settings.json"
 
@@ -150,8 +270,8 @@ install_framework() {
     print_warn "PROJECT_LESSONS.md already exists — skipping"
   fi
 
-  # Create .env.example (never overwrite)
-  if [ ! -f ".env.example" ]; then
+  # Create .env.example (never overwrite, skip for static HTML sites)
+  if [ "$FRAMEWORK" != "static-html" ] && [ ! -f ".env.example" ]; then
     generate_env_example
     print_step "Created: .env.example"
   fi
@@ -176,6 +296,9 @@ generate_hierarchical_claude_md() {
   local COUNT=0
 
   case "$FRAMEWORK" in
+    static-html)
+      # Static HTML sites are typically flat — no subdirectory CLAUDE.md needed
+      ;;
     nextjs)
       # Next.js App Router directories
       if [ -d "app" ] && [ ! -f "app/CLAUDE.md" ]; then
@@ -244,6 +367,7 @@ generate_claude_md() {
     django) FRAMEWORK_DESC="Django" ;;
     fastapi) FRAMEWORK_DESC="FastAPI" ;;
     flask) FRAMEWORK_DESC="Flask" ;;
+    static-html) FRAMEWORK_DESC="Static HTML/CSS" ;;
     *) FRAMEWORK_DESC="$FRAMEWORK" ;;
   esac
 
@@ -253,6 +377,7 @@ generate_claude_md() {
     typescript) LANGUAGE_DESC="TypeScript" ;;
     javascript) LANGUAGE_DESC="JavaScript" ;;
     python) LANGUAGE_DESC="Python" ;;
+    html) LANGUAGE_DESC="HTML/CSS/JavaScript" ;;
     *+python) LANGUAGE_DESC="TypeScript + Python" ;;
   esac
 
@@ -306,9 +431,133 @@ content = content.replace('{{ENV_VARS}}', '''$(echo -e "$ENV_VARS")''')
 content = content.replace('{{EXTRA_REFS}}', '''$(echo -e "$EXTRA_REFS")''')
 open('CLAUDE.md', 'w').write(content)
 " 2>/dev/null || true
+
+    # Post-process for static HTML sites — replace JS-specific content
+    if [ "$FRAMEWORK" = "static-html" ]; then
+      python3 -c "
+content = open('CLAUDE.md').read()
+
+# Replace Architecture Principles
+old_arch = '''## Architecture Principles
+- **Separation of concerns** — Pages/routes handle UI composition only. Business logic goes in services or hooks.
+- **No duplication** — If logic exists in 2+ places, extract to a shared module.
+- **Consistent patterns** — Follow the existing structure. Same type of code goes in the same type of place.
+- **Types co-located** — Define types near the code that uses them. Shared types go in lib/types.
+- **Search before creating** — Always check if a utility, component, or pattern already exists before building a new one.
+- See \`.claude/architecture.json\` for specific rules and boundaries.'''
+
+new_arch = '''## Architecture Principles
+- **Self-contained pages** — Each HTML file contains its own styles in \`<style>\` tags unless a shared CSS file exists.
+- **No duplication** — If the same HTML pattern appears on multiple pages, keep it consistent across files.
+- **Consistent patterns** — Follow the existing structure. Use the same CSS class naming and layout conventions.
+- **No build system** — This is intentionally a zero-dependency static site. Do not add npm, webpack, or frameworks.
+- **Search before creating** — Always check if a CSS class or HTML pattern already exists before building a new one.
+- See \`.claude/architecture.json\` for specific rules and boundaries.'''
+
+content = content.replace(old_arch, new_arch)
+
+# Replace Common Mistakes
+old_mistakes = '''## Common Mistakes to Avoid
+- Do not weaken linting or formatting configs to suppress errors — fix the source code
+- Do not commit console.log, debugger, or print() statements
+- Do not hardcode API keys, tokens, or secrets — use environment variables
+- Do not modify files in node_modules/, .next/, dist/, or build/
+- Do not create new utility functions without first checking if one already exists
+- Do not skip TypeScript types — avoid \`any\` unless absolutely necessary
+- Do not put business logic in page.tsx or route.ts files'''
+
+new_mistakes = '''## Common Mistakes to Avoid
+- Do not add a package.json or build system — this is intentionally a zero-dependency static site
+- Do not create external .css or .js files unless the project architecture changes
+- Do not hardcode API keys, tokens, or secrets in HTML files
+- Do not break the hosting deployment (keep index.html at root, preserve CNAME if present)
+- Do not add files that static hosting cannot serve (no server-side code)'''
+
+content = content.replace(old_mistakes, new_mistakes)
+
+# Replace Conventions
+old_conv = '''## Conventions
+- Follow existing code patterns — search the codebase before creating new utilities
+- Keep components/modules small and focused (max ~400 lines per file)
+- Use the project's existing styling approach
+- API routes should be thin wrappers — business logic belongs in dedicated modules'''
+
+new_conv = '''## Conventions
+- All CSS is inline in \`<style>\` tags within each HTML file (unless a shared CSS file exists)
+- Keep HTML files self-contained — each page has its own styles
+- Responsive design using media queries within each file
+- Follow existing CSS class naming patterns
+- Images are typically in the project root or an assets directory'''
+
+content = content.replace(old_conv, new_conv)
+
+# Replace Environment Variables section for static sites
+old_env = '''## Environment Variables
+Copy \`.env.example\` to \`.env.local\` and fill in values.'''
+content = content.replace(old_env, '')
+
+open('CLAUDE.md', 'w').write(content)
+" 2>/dev/null || true
+    fi
   else
     # Fallback: generate inline
-    cat > CLAUDE.md << CLAUDEEOF
+    if [ "$FRAMEWORK" = "static-html" ]; then
+      cat > CLAUDE.md << CLAUDEEOF
+# $PROJECT_NAME
+
+## Overview
+$FRAMEWORK_DESC site using $LANGUAGE_DESC.
+
+## Quick Start
+This is a static site — no build step required.
+\`\`\`bash
+$RUN_CMD
+\`\`\`
+
+## Project Structure
+$(echo -e "$DIRECTORY_MAP")
+
+## Architecture Principles
+- **Self-contained pages** — Each HTML file contains its own styles in \`<style>\` tags unless a shared CSS file exists.
+- **No duplication** — If the same HTML pattern appears on multiple pages, keep it consistent across files.
+- **Consistent patterns** — Follow the existing structure. Use the same CSS class naming and layout conventions.
+- **No build system** — This is intentionally a zero-dependency static site. Do not add npm, webpack, or frameworks.
+- See \`.claude/architecture.json\` for specific rules and boundaries.
+
+## Conventions
+- All CSS is inline in \`<style>\` tags within each HTML file (unless a shared CSS file exists)
+- Keep HTML files self-contained — each page has its own styles
+- Responsive design using media queries within each file
+- Follow existing CSS class naming patterns
+
+## Common Mistakes to Avoid
+- Do not add a package.json or build system — this is intentionally a zero-dependency static site
+- Do not create external .css or .js files unless the project architecture changes
+- Do not hardcode API keys, tokens, or secrets in HTML files
+- Do not break the hosting deployment (keep index.html at root, preserve CNAME if present)
+- Do not add files that static hosting cannot serve (no server-side code)
+
+## Communication Style
+- Write all commit messages, PR descriptions, and summaries in **plain language** that a non-technical person can understand.
+- Explain WHAT changed, WHY it matters, and WHAT it means for the project — not just technical details.
+
+## Commands
+- \`/audit\` — Check the project for code quality and architecture issues
+- \`/save\` — Save your work (commits and pushes to GitHub)
+- \`/share\` — Share your work for review (creates a pull request)
+
+## Session Workflow
+- Changes are auto-tracked in \`.claude/sessions/\`
+- You'll be reminded to save checkpoints after significant changes
+- Review \`PROJECT_LESSONS.md\` at the start of each session for past corrections
+
+## References
+- \`PROJECT_LESSONS.md\` — Corrections and learnings
+- \`.claude/architecture.json\` — Architecture rules
+$(echo -e "$EXTRA_REFS")
+CLAUDEEOF
+    else
+      cat > CLAUDE.md << CLAUDEEOF
 # $PROJECT_NAME
 
 ## Overview
@@ -342,6 +591,7 @@ $(echo -e "$ENV_VARS")
 - \`PROJECT_LESSONS.md\` — Corrections and learnings
 $(echo -e "$EXTRA_REFS")
 CLAUDEEOF
+    fi
   fi
 }
 
@@ -472,6 +722,30 @@ ARCHEOF
 }
 ARCHEOF
       ;;
+    static-html)
+      cat > .claude/architecture.json << 'ARCHEOF'
+{
+  "stack": "static-html",
+  "rules": {
+    "max_file_lines": 1200,
+    "max_function_lines": 50,
+    "consistent_naming": true
+  },
+  "naming": {
+    "pages": "lowercase.html",
+    "images": "lowercase, descriptive",
+    "css_classes": "kebab-case"
+  },
+  "boundaries": {
+    "no_server_side_code": "Static hosting only — no backend logic",
+    "self_contained_pages": "Each HTML file should contain its own styles unless a shared CSS file exists"
+  },
+  "structure": {
+    "root": "HTML pages, images, and config files at project root"
+  }
+}
+ARCHEOF
+      ;;
     *)
       # Generic fallback
       cat > .claude/architecture.json << 'ARCHEOF'
@@ -507,7 +781,23 @@ setup_git() {
 
   # Add session files to .gitignore if not already there
   if [ ! -f ".gitignore" ]; then
-    cat > .gitignore << 'GIEOF'
+    if [ "$FRAMEWORK" = "static-html" ]; then
+      cat > .gitignore << 'GIEOF'
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Framework runtime
+.claude/sessions/.current-session
+GIEOF
+    else
+      cat > .gitignore << 'GIEOF'
 # Dependencies
 node_modules/
 .venv/
@@ -538,6 +828,7 @@ Thumbs.db
 # Framework runtime
 .claude/sessions/.current-session
 GIEOF
+    fi
     print_step "Created: .gitignore"
   fi
 }

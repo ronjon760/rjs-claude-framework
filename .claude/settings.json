@@ -102,6 +102,15 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash .claude/hooks/stop-test.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
             "command": "bash .claude/hooks/stop-milestone.sh"
           }
         ]

@@ -46,6 +46,7 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Structure summaries with: "What changed" → "Why we did it" → "What this means for you"
 
 ## Commands
+- `/test` — Write and run tests for your code (tests first, then implementation)
 - `/audit` — Check the project for code quality and architecture issues
 - `/save` — Save your work (commits and pushes to GitHub)
 - `/share` — Share your work for review (creates a pull request)
