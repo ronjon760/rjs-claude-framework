@@ -8,7 +8,7 @@ set -e
 # ============================================================
 
 REPO_URL="https://github.com/ronjon760/rjs-claude-framework.git"
-FRAMEWORK_VERSION="1.0.0"
+FRAMEWORK_VERSION="1.5.0"
 
 # Resolve the directory where this script lives (for local installs)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -275,11 +275,7 @@ SETTINGSEOF
 
 # ---- File Installation ----
 
-install_framework() {
-  local UPDATE_MODE="${1:-false}"
-
-  echo -e "${BOLD}Setting up framework...${NC}"
-
+fetch_framework() {
   # Use local framework directory if available, otherwise clone from remote
   TEMP_DIR=$(mktemp -d)
   trap "rm -rf $TEMP_DIR" EXIT
@@ -294,6 +290,12 @@ install_framework() {
       exit 1
     }
   fi
+}
+
+install_framework() {
+  local UPDATE_MODE="${1:-false}"
+
+  echo -e "${BOLD}Setting up framework...${NC}"
 
   # Copy .claude/hooks/ (always overwrite — these are framework-managed)
   mkdir -p .claude/hooks .claude/sessions .claude/commands
@@ -301,9 +303,20 @@ install_framework() {
   chmod +x .claude/hooks/*.sh
   print_step "Installed: .claude/hooks/ (14 automation scripts)"
 
+  # Write framework version stamp
+  if [ -f ".claude/.framework-version" ]; then
+    # Preserve original install date on update
+    ORIG_INSTALL=$(grep -o '"installed":"[^"]*"' .claude/.framework-version 2>/dev/null | head -1 | cut -d'"' -f4)
+    [ -z "$ORIG_INSTALL" ] && ORIG_INSTALL=$(date +%Y-%m-%d)
+  else
+    ORIG_INSTALL=$(date +%Y-%m-%d)
+  fi
+  echo "{\"version\":\"$FRAMEWORK_VERSION\",\"installed\":\"$ORIG_INSTALL\",\"updated\":\"$(date +%Y-%m-%d)\",\"repo\":\"ronjon760/rjs-claude-framework\"}" > .claude/.framework-version
+  print_step "Stamped: .claude/.framework-version (v$FRAMEWORK_VERSION)"
+
   # Copy .claude/commands/ (always overwrite — framework-managed)
   cp "$TEMP_DIR/framework/.claude/commands/"*.md .claude/commands/
-  print_step "Installed: .claude/commands/ (/audit, /save, /share, /test)"
+  print_step "Installed: .claude/commands/ (/audit, /save, /share, /test, /update)"
 
   # Copy/generate settings.json (overwrite on update, no-clobber on fresh install)
   if [ "$UPDATE_MODE" = "true" ] || [ ! -f ".claude/settings.json" ]; then
@@ -1082,6 +1095,8 @@ Thumbs.db
 
 # Framework runtime
 .claude/sessions/.current-session
+.claude/backups/
+.claude/.version-cache
 GIEOF
     else
       cat > .gitignore << 'GIEOF'
@@ -1114,6 +1129,8 @@ Thumbs.db
 
 # Framework runtime
 .claude/sessions/.current-session
+.claude/backups/
+.claude/.version-cache
 GIEOF
     fi
     print_step "Created: .gitignore"
@@ -1159,12 +1176,60 @@ main() {
   check_prerequisites
   detect_stack
   detect_fdd_candidate
+  fetch_framework
 
   if [ "$UPDATE_MODE" = "true" ]; then
-    echo -e "${BOLD}Updating framework...${NC}"
-    install_framework "true"
+    echo -e "${BOLD}Checking for updates...${NC}"
+
+    # Read current installed version
+    CURRENT_VERSION="none"
+    if [ -f ".claude/.framework-version" ]; then
+      CURRENT_VERSION=$(grep -o '"version":"[^"]*"' .claude/.framework-version 2>/dev/null | head -1 | cut -d'"' -f4)
+    fi
+
+    # Show version comparison
+    if [ "$CURRENT_VERSION" = "$FRAMEWORK_VERSION" ]; then
+      echo -e "  ${GREEN}Already up to date${NC} (v$FRAMEWORK_VERSION)"
+      exit 0
+    fi
+
+    if [ "$CURRENT_VERSION" != "none" ]; then
+      echo -e "  Current: v$CURRENT_VERSION"
+    else
+      echo -e "  Current: ${YELLOW}unknown (pre-versioning)${NC}"
+    fi
+    echo -e "  Latest:  v$FRAMEWORK_VERSION"
     echo ""
-    echo -e "${GREEN}${BOLD}Framework updated!${NC}"
+
+    # Create timestamped backup
+    BACKUP_DIR=".claude/backups/$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$BACKUP_DIR"
+    cp -r .claude/hooks/ "$BACKUP_DIR/hooks/" 2>/dev/null || true
+    cp .claude/settings.json "$BACKUP_DIR/settings.json" 2>/dev/null || true
+    cp -r .claude/commands/ "$BACKUP_DIR/commands/" 2>/dev/null || true
+    print_step "Backup saved: $BACKUP_DIR"
+
+    # Run the update
+    install_framework "true"
+
+    # Show what changed (if CHANGELOG available)
+    if [ -f "$TEMP_DIR/framework/CHANGELOG.md" ]; then
+      echo ""
+      echo -e "${BOLD}What's new:${NC}"
+      # Show entries between current and new version
+      if [ "$CURRENT_VERSION" != "none" ]; then
+        sed -n "/^## \[$FRAMEWORK_VERSION\]/,/^## \[$CURRENT_VERSION\]/p" "$TEMP_DIR/framework/CHANGELOG.md" | head -30 | tail -n +1
+      else
+        # No previous version — show latest entry only
+        sed -n "/^## \[$FRAMEWORK_VERSION\]/,/^## \[/p" "$TEMP_DIR/framework/CHANGELOG.md" | head -20 | tail -n +1
+      fi
+    fi
+
+    echo ""
+    echo -e "${GREEN}${BOLD}Framework updated to v${FRAMEWORK_VERSION}!${NC}"
+    echo -e "  Backup saved to: $BACKUP_DIR"
+    echo -e "  Run ${BOLD}/update${NC} inside Claude to check for future updates."
+    echo ""
   else
     install_framework "false"
     setup_git

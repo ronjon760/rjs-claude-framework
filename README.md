@@ -4,34 +4,39 @@ A portable, one-command framework that makes any project enterprise-ready for AI
 
 ## What It Does
 
-When installed in a project, the framework runs **11 automated hooks** that silently enforce code quality, security, and best practices every time Claude Code is used. The developer just describes what they want — the framework handles the rest.
+When installed in a project, the framework runs **14 automated hooks** that silently enforce code quality, security, and best practices every time Claude Code is used. The developer just describes what they want — the framework handles the rest.
 
 ### Automated Hooks
 
-| Hook | When | What It Does |
-|------|------|-------------|
-| **Security Guard** | Before file access | Blocks reading `.env`, `.pem`, credentials |
-| **Commit Quality** | Before `git commit` | Catches debug code, hardcoded secrets, blocks `--no-verify` |
-| **Config Protection** | Before config edits | Warns against weakening linter/formatter configs |
-| **Auto-Format** | After file edits | Runs Prettier (JS/TS) or Ruff (Python) automatically |
-| **Auto-Lint** | After file edits | Runs ESLint (JS/TS) or Ruff (Python), reports issues |
-| **Console Warning** | After file edits | Warns about `console.log` / `print()` in production code |
-| **Session Tracker** | After file edits | Logs every change to the session log |
-| **Type Check** | After every response | Runs `tsc` or `mypy` to catch type errors |
-| **Milestone Reminder** | After every response | Suggests saving after 5+ changes without a commit |
-| **Desktop Notify** | After every response | System notification when Claude finishes |
-| **Session Init** | On session start | Creates a new session log file |
+| Hook                   | When                 | What It Does                                                |
+| ---------------------- | -------------------- | ----------------------------------------------------------- |
+| **Security Guard**     | Before file access   | Blocks reading `.env`, `.pem`, credentials                  |
+| **Commit Quality**     | Before `git commit`  | Catches debug code, hardcoded secrets, blocks `--no-verify` |
+| **Config Protection**  | Before config edits  | Warns against weakening linter/formatter configs            |
+| **Auto-Format**        | After file edits     | Runs Prettier (JS/TS) or Ruff (Python) automatically        |
+| **Auto-Lint**          | After file edits     | Runs ESLint (JS/TS) or Ruff (Python), reports issues        |
+| **Console Warning**    | After file edits     | Warns about `console.log` / `print()` in production code    |
+| **Session Tracker**    | After file edits     | Logs every change to the session log                        |
+| **Type Check**         | After every response | Runs `tsc` or `mypy` to catch type errors                   |
+| **Milestone Reminder** | After every response | Suggests saving after 5+ changes without a commit           |
+| **Desktop Notify**     | After every response | System notification when Claude finishes                    |
+| **Architecture Check** | After file edits     | Validates architecture boundaries and rules                 |
+| **Test Runner**        | After every response | Runs relevant tests to catch regressions                    |
+| **Session Init**       | On session start     | Creates a new session log file                              |
+| **Version Check**      | On session start     | Notifies when a framework update is available               |
 
 ### What Gets Generated
 
-| File | Purpose |
-|------|---------|
-| `CLAUDE.md` | Auto-generated project guide that Claude reads every session |
-| `PROJECT_LESSONS.md` | Tracks corrections so Claude doesn't repeat mistakes |
-| `.env.example` | Documents required environment variables |
-| `.claude/settings.json` | Hook configuration |
-| `.claude/hooks/*.sh` | 11 automation scripts |
-| `.claude/sessions/*.md` | Session logs for collaboration visibility |
+| File                         | Purpose                                                          |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `CLAUDE.md`                  | Auto-generated project guide that Claude reads every session     |
+| `PROJECT_LESSONS.md`         | Tracks corrections so Claude doesn't repeat mistakes             |
+| `.env.example`               | Documents required environment variables                         |
+| `.claude/settings.json`      | Hook configuration                                               |
+| `.claude/hooks/*.sh`         | 14 automation scripts                                            |
+| `.claude/commands/*.md`      | Slash commands (`/audit`, `/save`, `/share`, `/test`, `/update`) |
+| `.claude/.framework-version` | Installed framework version for update tracking                  |
+| `.claude/sessions/*.md`      | Session logs for collaboration visibility                        |
 
 ## Quick Start
 
@@ -43,6 +48,7 @@ bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/
 ```
 
 The setup script automatically:
+
 1. Detects your tech stack (Next.js, React, Express, Python, static HTML, etc.)
 2. Installs the appropriate hooks and settings
 3. Generates a `CLAUDE.md` tailored to your project
@@ -51,21 +57,33 @@ The setup script automatically:
 
 ### Update an existing installation
 
+From within Claude Code (recommended):
+
+```
+/update
+```
+
+Or from the terminal:
+
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh) --update
 ```
 
-Updates hook scripts and settings without overwriting your `CLAUDE.md`, `PROJECT_LESSONS.md`, or `.env.example`.
+Updates hook scripts, commands, and settings without overwriting your `CLAUDE.md`, `PROJECT_LESSONS.md`, or `architecture.json`. A timestamped backup is created automatically in `.claude/backups/`.
+
+### Version tracking
+
+Every project tracks its framework version in `.claude/.framework-version`. When you start a new Claude session, the framework checks for updates in the background and notifies you if a newer version is available. See `CHANGELOG.md` in this repo for version history.
 
 ## Supported Stacks
 
-| Stack | Formatter | Linter | Type Checker |
-|-------|-----------|--------|-------------|
-| TypeScript (Next.js, React, Node) | Prettier | ESLint | tsc |
-| JavaScript | Prettier | ESLint | — |
-| Python | Ruff or Black | Ruff | mypy |
-| HTML/CSS (Static sites) | — | — | — |
-| Mixed JS/TS + Python | Both | Both | Both |
+| Stack                             | Formatter     | Linter | Type Checker |
+| --------------------------------- | ------------- | ------ | ------------ |
+| TypeScript (Next.js, React, Node) | Prettier      | ESLint | tsc          |
+| JavaScript                        | Prettier      | ESLint | —            |
+| Python                            | Ruff or Black | Ruff   | mypy         |
+| HTML/CSS (Static sites)           | —             | —      | —            |
+| Mixed JS/TS + Python              | Both          | Both   | Both         |
 
 ## Daily Workflow
 
@@ -106,6 +124,7 @@ When Claude makes a mistake, add a lesson to `PROJECT_LESSONS.md`:
 
 ```markdown
 ### Don't use inline styles for the pricing cards
+
 **Date:** 2026-04-11
 **What happened:** Claude used inline styles instead of Tailwind classes
 **Correction:** Always use Tailwind utility classes for styling, never inline styles
@@ -122,6 +141,13 @@ your-project/
 ├── .env.example                       # Environment variable docs
 └── .claude/
     ├── settings.json                  # Hook configuration
+    ├── .framework-version             # Installed framework version
+    ├── commands/
+    │   ├── audit.md                   # /audit command
+    │   ├── save.md                    # /save command
+    │   ├── share.md                   # /share command
+    │   ├── test.md                    # /test command
+    │   └── update.md                  # /update command
     ├── hooks/
     │   ├── pre-security-guard.sh      # Block sensitive file access
     │   ├── pre-commit-quality.sh      # Clean commit enforcement
@@ -130,10 +156,14 @@ your-project/
     │   ├── post-lint.sh               # Auto-lint code
     │   ├── post-console-warn.sh       # Debug statement warnings
     │   ├── post-session-track.sh      # Log file changes
+    │   ├── post-architecture-check.sh # Architecture boundary checks
     │   ├── stop-typecheck.sh          # Type validation
+    │   ├── stop-test.sh               # Run tests after changes
     │   ├── stop-milestone.sh          # Checkpoint reminders
     │   ├── stop-notify.sh             # Desktop notifications
-    │   └── session-init.sh            # Session start logging
+    │   ├── session-init.sh            # Session start logging
+    │   └── version-check.sh           # Check for framework updates
+    ├── backups/                        # Pre-update backups (gitignored)
     └── sessions/
         └── *.md                       # Session logs (auto-generated)
 ```
