@@ -1,27 +1,71 @@
 # {{FEATURE_NAME}}
 
-## Purpose
-<!-- One sentence: what does this feature do? -->
+> A quickref captures **what a feature is, why it exists, how a user uses it, and where its wiring stops**. Writing one is also a quality gate: if you can't describe the user journey in three steps, the feature isn't real yet — and that gap belongs in the "Known gaps" section so it's visible.
 
-## Key Files
-| File | Role |
+## Status
+
+**One word:**
+- `built` — fully wired, edge cases handled, used in production
+- `partial` — visible in the UI but missing real wiring (a gap-filled placeholder)
+- `spec` — described but not implemented
+
+If `partial`, name what's missing in the **Known gaps** section below.
+
+## Why this exists
+
+Two or three sentences in plain language. **What problem does this solve for the user?** Avoid jargon. A non-technical owner should understand the value from this section alone.
+
+## What it does
+
+One paragraph describing the user-facing behavior. The contract: if the user does X, the app responds with Y. Don't list internal mechanisms here — that's "How it works."
+
+## User journey
+
+The shortest path through the feature, from a user's point of view. Each step says **what they see, what they do, and what happens next.**
+
+1. **What they see** — entry point in the UI.
+2. **What they do** — click, type, drag, etc.
+3. **What happens** — the immediate response, plus any background work the user should know is happening.
+
+If the journey has branches (success vs error, with selection vs without), capture each clearly.
+
+## How it works (technical)
+
+A paragraph or two on the implementation. Aim for the kind of summary that helps a future contributor (or AI agent) orient in 60 seconds.
+
+**Key files:**
+
+| Path | Role |
 |------|------|
-| `components/` | UI components for this feature |
-| `hooks/` | Custom hooks (data fetching, state logic) |
-| `types.ts` | TypeScript types and interfaces |
-| `index.ts` | Public API (barrel export) |
+| `path/to/file.tsx` | What it does |
+| `path/to/file.ts` | What it does |
 
-## Data Flow
-<!-- How does data move through this feature? Example:
-Screen -> useProfile hook -> supabase profileService -> database -->
+**Data flow:**
+- Where state lives (component / context / external store / persistence layer).
+- What triggers reads vs writes.
+- Cache or debounce behaviors worth knowing.
 
-## Dependencies
-<!-- What shared code does this feature use? Example:
-- `lib/supabase.ts` — database client
-- `lib/sanitize.ts` — input validation -->
+## Known gaps / TODOs
 
-## Edge Cases
-<!-- Known tricky behaviors, error states, or special conditions -->
+**This is the most important section.** List anything that's spec'd but not yet wired, hardcoded values that should come from real sources, edge cases not handled, or intentional placeholders. A future reviewer should be able to scan this and know what's "real" vs "demo."
 
-## Related Features
-<!-- Other features this one relates to (but does NOT import from) -->
+- Gap 1 — description + why it's deferred / what's needed to fix.
+- Gap 2.
+- ...
+
+If this section is empty, the feature is genuinely complete. If it isn't, mark **Status: partial** at the top.
+
+## Touchpoints
+
+Where this feature appears in the UI:
+
+- **Sidebar / right rail / top bar** — exactly which surface and what triggers visibility.
+- **Routes** — `/some/route`.
+- **Keyboard shortcuts** — list, if any.
+
+## Related quickrefs
+
+Cross-link other features that interact with this one (same data, sequential UX flows, shared components).
+
+- [Feature A](./feature-a.md)
+- [Feature B](./feature-b.md)

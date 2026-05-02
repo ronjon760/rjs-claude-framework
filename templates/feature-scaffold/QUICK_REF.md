@@ -1,30 +1,45 @@
 # {{FEATURE_NAME}}
 
-## Purpose
+## Status
 
-<!-- One sentence: what does this feature do? -->
+`built` | `partial` | `spec`
 
-## Key Files
+## Why this exists
 
-| File          | Role                                      |
-| ------------- | ----------------------------------------- |
-| `components/` | UI components for this feature            |
-| `hooks/`      | Custom hooks (data fetching, state logic) |
-| `types.ts`    | TypeScript types and interfaces           |
-| `index.ts`    | Public API (barrel export)                |
+Two or three sentences in plain language describing the user value. No jargon.
 
-## Data Flow
+## What it does
 
-<!-- How does data move through this feature? -->
+One paragraph describing the user-facing behavior.
 
-## Dependencies
+## User journey
 
-<!-- What shared code does this feature use? -->
+1. **What they see** — entry point.
+2. **What they do** — interaction.
+3. **What happens** — response.
 
-## Edge Cases
+## How it works (technical)
 
-<!-- Known tricky behaviors or special conditions -->
+**Key files:**
 
-## Related Features
+| Path | Role |
+|------|------|
+| `components/` | UI components for this feature |
+| `hooks/` | Custom hooks (data, state) |
+| `types.ts` | TypeScript types |
+| `index.ts` | Public API |
 
-<!-- Other features this one relates to (but does NOT import from) -->
+**Data flow:** Where state lives, what triggers reads/writes, any cache or debounce behaviors.
+
+## Known gaps / TODOs
+
+- Gap 1
+- Gap 2
+
+## Touchpoints
+
+Where this feature appears in the UI.
+
+## Related quickrefs
+
+- [Feature A](./feature-a.md)
