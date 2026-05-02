@@ -4,11 +4,12 @@ set -e
 # ============================================================
 # RJ's Claude Framework — One-Command Installer
 # Usage: bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh)
-# Or:    bash setup.sh [--update] [--fdd]
+# Or:    bash setup.sh [--update] [--no-fdd]
+# Note: FDD (Feature-Driven Development) is enabled by default. Pass --no-fdd to opt out.
 # ============================================================
 
 REPO_URL="https://github.com/ronjon760/rjs-claude-framework.git"
-FRAMEWORK_VERSION="1.5.0"
+FRAMEWORK_VERSION="1.6.0"
 
 # Resolve the directory where this script lives (for local installs)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -126,10 +127,9 @@ detect_stack() {
 FDD_ENABLED=false
 
 detect_fdd_candidate() {
-  # If --fdd was passed, enable unconditionally
-  if [ "$FDD_FLAG" = "true" ]; then
-    FDD_ENABLED=true
-    print_step "FDD enabled (via --fdd flag)"
+  # Explicit opt-out wins
+  if [ "$NO_FDD_FLAG" = "true" ]; then
+    print_warn "FDD disabled (via --no-fdd flag)"
     return
   fi
 
@@ -138,12 +138,9 @@ detect_fdd_candidate() {
     return
   fi
 
-  # Suggest FDD based on project size metrics
-  if [ "$FDD_SUGGESTED" = "true" ]; then
-    print_warn "This project has ${SCREEN_PAGE_COUNT:-0} screens/pages and ${FILE_COUNT:-0} source files."
-    print_warn "Consider enabling Feature-Driven Development: bash setup.sh --fdd"
-    echo ""
-  fi
+  # FDD is on by default for all other stacks (--fdd retained for back-compat)
+  FDD_ENABLED=true
+  print_step "FDD enabled (default — pass --no-fdd to opt out)"
 }
 
 generate_fdd_structure() {
@@ -301,7 +298,8 @@ install_framework() {
   mkdir -p .claude/hooks .claude/sessions .claude/commands
   cp "$TEMP_DIR/framework/.claude/hooks/"*.sh .claude/hooks/
   chmod +x .claude/hooks/*.sh
-  print_step "Installed: .claude/hooks/ (14 automation scripts)"
+  HOOK_COUNT=$(ls .claude/hooks/*.sh 2>/dev/null | wc -l | tr -d ' ')
+  print_step "Installed: .claude/hooks/ ($HOOK_COUNT automation scripts)"
 
   # Write framework version stamp
   if [ -f ".claude/.framework-version" ]; then
@@ -1164,11 +1162,13 @@ install_deps() {
 main() {
   local UPDATE_MODE=false
   FDD_FLAG=false
+  NO_FDD_FLAG=false
 
   for arg in "$@"; do
     case "$arg" in
       --update) UPDATE_MODE=true ;;
-      --fdd) FDD_FLAG=true ;;
+      --fdd) FDD_FLAG=true ;;       # retained for back-compat (FDD is now default-on)
+      --no-fdd) NO_FDD_FLAG=true ;;
     esac
   done
 

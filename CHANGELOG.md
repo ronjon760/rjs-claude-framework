@@ -2,6 +2,25 @@
 
 All notable changes to RJ's Claude Framework.
 
+## [1.6.0] - 2026-05-02
+
+### Changed
+
+- **FDD is now enabled by default.** New projects (except static HTML) start with Feature-Driven Development turned on in `.claude/architecture.json`. The previous `--fdd` flag is retained for back-compat but no longer required. Pass `--no-fdd` to opt out.
+
+### Added
+
+- **`pre-fdd-guard.sh` hook** — a PreToolUse hook that hard-blocks file writes that violate FDD structure. It refuses to let Claude create:
+  - Non-shadcn components inside `src/components/` (those belong in `src/features/<name>/components/`)
+  - Feature components inside `src/app/` (router files like `page.tsx`, `layout.tsx`, `route.ts` still pass)
+  - New files inside a feature folder before its `QUICK_REF.md` exists
+  The hook is a no-op when `fdd.enabled` is false, so opt-out projects are unaffected.
+- **Session-start FDD reminder** — `session-init.sh` now prints a short reminder to Claude's session context when FDD is enabled, so the rules are visible at the top of every session instead of buried in CLAUDE.md.
+
+### Why
+
+FDD documentation existed in CLAUDE.md and the `/feature` command, but nothing actually enforced the structure. Claude routinely created components in `src/app/` or `src/components/` without scaffolding a feature folder, and forgot to write `QUICK_REF.md`. This release closes the gap with a hard pre-write block plus a per-session reminder.
+
 ## [1.5.0] - 2026-04-13
 
 ### Added

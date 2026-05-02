@@ -4,7 +4,7 @@ A portable, one-command framework that makes any project enterprise-ready for AI
 
 ## What It Does
 
-When installed in a project, the framework runs **14 automated hooks** that silently enforce code quality, security, and best practices every time Claude Code is used. The developer just describes what they want — the framework handles the rest.
+When installed in a project, the framework runs **15 automated hooks** that silently enforce code quality, security, architecture, and best practices every time Claude Code is used. The developer just describes what they want — the framework handles the rest.
 
 ### Automated Hooks
 
@@ -13,6 +13,7 @@ When installed in a project, the framework runs **14 automated hooks** that sile
 | **Security Guard**     | Before file access   | Blocks reading `.env`, `.pem`, credentials                  |
 | **Commit Quality**     | Before `git commit`  | Catches debug code, hardcoded secrets, blocks `--no-verify` |
 | **Config Protection**  | Before config edits  | Warns against weakening linter/formatter configs            |
+| **FDD Guard**          | Before file writes   | Blocks files that violate Feature-Driven Development structure (when FDD is enabled) |
 | **Auto-Format**        | After file edits     | Runs Prettier (JS/TS) or Ruff (Python) automatically        |
 | **Auto-Lint**          | After file edits     | Runs ESLint (JS/TS) or Ruff (Python), reports issues        |
 | **Console Warning**    | After file edits     | Warns about `console.log` / `print()` in production code    |
@@ -22,8 +23,14 @@ When installed in a project, the framework runs **14 automated hooks** that sile
 | **Desktop Notify**     | After every response | System notification when Claude finishes                    |
 | **Architecture Check** | After file edits     | Validates architecture boundaries and rules                 |
 | **Test Runner**        | After every response | Runs relevant tests to catch regressions                    |
-| **Session Init**       | On session start     | Creates a new session log file                              |
+| **Session Init**       | On session start     | Creates a session log file + reminds Claude of FDD rules    |
 | **Version Check**      | On session start     | Notifies when a framework update is available               |
+
+### Feature-Driven Development (FDD)
+
+FDD is **enabled by default** for non-static projects. With FDD on, every feature lives in a self-contained folder under `src/features/<name>/` with `components/`, `hooks/`, `types.ts`, `index.ts`, and `QUICK_REF.md`. The **FDD Guard** hook hard-blocks file writes that put feature code in `src/components/` (reserved for shadcn primitives) or `src/app/` (reserved for Next.js routing), and refuses to let Claude add files to a feature folder before its `QUICK_REF.md` exists.
+
+To opt out: `bash setup.sh --no-fdd` (or set `fdd.enabled` to `false` in `.claude/architecture.json`). Use `/feature <name>` to scaffold a new feature folder and `/quickref <name>` to refresh its docs.
 
 ### What Gets Generated
 
@@ -33,7 +40,7 @@ When installed in a project, the framework runs **14 automated hooks** that sile
 | `PROJECT_LESSONS.md`         | Tracks corrections so Claude doesn't repeat mistakes             |
 | `.env.example`               | Documents required environment variables                         |
 | `.claude/settings.json`      | Hook configuration                                               |
-| `.claude/hooks/*.sh`         | 14 automation scripts                                            |
+| `.claude/hooks/*.sh`         | 15 automation scripts                                            |
 | `.claude/commands/*.md`      | Slash commands (`/audit`, `/save`, `/share`, `/test`, `/update`) |
 | `.claude/.framework-version` | Installed framework version for update tracking                  |
 | `.claude/sessions/*.md`      | Session logs for collaboration visibility                        |
@@ -152,6 +159,7 @@ your-project/
     │   ├── pre-security-guard.sh      # Block sensitive file access
     │   ├── pre-commit-quality.sh      # Clean commit enforcement
     │   ├── pre-config-protect.sh      # Config change warnings
+    │   ├── pre-fdd-guard.sh           # Block FDD violations on file writes
     │   ├── post-format.sh             # Auto-format code
     │   ├── post-lint.sh               # Auto-lint code
     │   ├── post-console-warn.sh       # Debug statement warnings
