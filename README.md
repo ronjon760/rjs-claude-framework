@@ -415,6 +415,38 @@ your-project/
 
 ---
 
+## Things worth exploring next
+
+The framework gives you a solid base. Once you've lived with it for a few projects, here are directions worth knowing about — pieces you can layer on top as the work grows. None of these are required.
+
+### A `DESIGN.md` for your design system
+
+If your project has a brand — colors, typography, spacing rules, component patterns — Claude follows them far more consistently when those rules are written down in a structured way. Google Labs Code published a spec for exactly this, called [**DESIGN.md**](https://github.com/google-labs-code/design.md). It's a single file that combines machine-readable design tokens (YAML) with the human-readable rationale behind them (Markdown). Agents parse the tokens for exact values; humans (and Claude) read the prose to understand intent.
+
+You don't need to write one by hand. Drop a few example screens, a brand guide, or a Figma export into Claude Code and ask:
+
+> Generate a DESIGN.md for this project from these examples. Follow the spec at github.com/google-labs-code/design.md.
+
+Once it's in your repo, Claude reads it like any other context file at the start of every session — so every new component starts from your design system instead of generic defaults. There's also a companion CLI (`@google/design.md`) that validates tokens, checks WCAG accessibility, and exports to Tailwind/CSS/W3C formats.
+
+### Custom subagents
+
+Claude Code supports specialized assistants in `.claude/agents/` — pre-defined personas with their own tools and prompts that Claude delegates to for isolated tasks. Useful ones to add later: a **security-reviewer** for PR checks, an **explorer** for read-only codebase research that doesn't pollute your main session, and a **refactorer** for cleanup runs. The framework doesn't ship these yet — they're worth adding as you spot tasks you do repeatedly.
+
+### Skills with frontmatter
+
+This framework's slash commands work well, but Anthropic's newer pattern is **skills** (`.claude/skills/<name>/SKILL.md` with YAML frontmatter). Skills can auto-invoke when relevant, declare which tools they need, and load conditionally — meaning Claude suggests the right one without you having to remember its name. A natural future step is migrating the framework's commands into skills.
+
+### MCP servers for live context
+
+Beyond local files, Claude Code can connect to **MCP servers** that pull in live context: GitHub (for issues and PRs), Sentry (for production errors), Postgres (for schema introspection), Notion or Linear (for tickets). Add them via `claude mcp add` once, and Claude can reference them in any conversation. Especially handy for *"fix the bug from this Sentry alert"* or *"build the feature this Linear ticket describes."*
+
+### Git worktrees for parallel work
+
+The Claude Code team's single biggest productivity tip: run several Claude sessions at once, each in its own **`git worktree`**. Use `claude --worktree feature-a` to spin up an isolated workspace; changes from one session don't collide with another. Particularly powerful for big refactors, where you can run a writer, a reviewer, and an explorer all at the same time.
+
+---
+
 ## License
 
 MIT
