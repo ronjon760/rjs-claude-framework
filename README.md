@@ -57,6 +57,21 @@ Once a week or so, you'll run `/audit` — it scans the whole project for things
 
 ---
 
+## A quick word on the 1M context window
+
+Claude Opus 4.7 has a **one-million-token context window** — roughly 750,000 words. That's the *love* part: you can stay in a single session for hours, working through a complex feature without losing track of what's already been discussed.
+
+The *hate* part: when context gets too full, Claude starts to slow down, forget earlier instructions, and make sloppier decisions. Performance degrades well *before* you actually "run out" of room. The 1M ceiling is a permission slip, not a target.
+
+Two habits keep this from biting you:
+
+- **Type `/context` every so often.** It prints how full the conversation is. Once you're past about **60–70%**, finish what you're on, run `/save`, and start a fresh session for the next chunk. A clean session with a sharp prompt almost always beats a long session full of accumulated noise.
+- **Set up a live context meter with `/statusline`.** Claude Code can render a persistent bar at the bottom of your terminal showing context usage and your current git branch — so you don't have to remember to check. Ask Claude: *"Set up a status line that shows context percentage and the current git branch."* It'll write the config for you, once, and then you can see it at a glance for the rest of forever.
+
+The Anthropic team's rule of thumb: when you've corrected Claude on the same thing twice in a row, the context is probably the problem. `/clear` and start over with what you've learned. It's not lost time — it's compounding interest.
+
+---
+
 ## Quick Start
 
 There are two ways in. Pick the one that matches how you like to learn.
