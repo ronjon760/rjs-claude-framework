@@ -4,6 +4,57 @@ A portable, one-command framework that makes any project enterprise-ready for AI
 
 ---
 
+## TL;DR
+
+You describe what you want. Claude writes the code. The framework — 15 automatic checks running silently in the background — keeps the work clean, safe, and organized. You save with one command. Done.
+
+- **What it is:** A layer that runs on top of Claude Code, the AI coding tool from Anthropic.
+- **What it does:** Auto-formats, lints, type-checks, blocks secret leaks, enforces a clean folder structure, runs your tests, and logs every change.
+- **Who it's for:** Non-technical owners who want trustworthy AI-built software, and developers who want guardrails that don't get in the way.
+- **Install:** open a terminal in your project and run
+
+  ```bash
+  bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh)
+  ```
+
+---
+
+## A day in the life
+
+It's Tuesday morning. You've had your coffee. You want to add a contact form to your site.
+
+You open a terminal, type `claude`, and hit enter. The framework has already started today's session log, quietly pinged GitHub to see if there's a newer version of itself, and reminded Claude how your project's folders are organized — before you've finished sitting down.
+
+You type:
+
+> Add a contact form to the home page that emails me when someone submits it.
+
+Claude gets to work. It creates a new folder under `src/features/contact-form/` — because if it had tried to drop the form in some random place, the **FDD Guard** would have stopped it cold. You watch a few files appear. After each one, the framework auto-formats the code, runs the linter, and notes any leftover debug statements.
+
+A few minutes later, your laptop pings: *"Claude has finished working."* You pop back in. The form looks great in the browser. But the test email never arrives.
+
+You tell Claude. It tries a fix. Still nothing. It tries again. Still broken.
+
+This is the moment to **stop**. Instead of typing yet another correction — which clutters the conversation and makes Claude *more* likely to compound the mistake — you press **Esc** twice. A menu of recent moves appears. Pick the spot before things went sideways. You're back. Re-prompt with what you just learned:
+
+> The form works visually, but the email isn't sending. The issue is probably in the API route — check the email setup.
+
+This time it works. You verify in your browser. You type `/save`. The framework writes a plain-English commit message, double-checks for leaked secrets, and pushes to GitHub.
+
+When the feature is ready for review, you type `/share`. Up pops a pull request your collaborator can read like a normal English document.
+
+That's the loop. You describe. Claude builds. The framework catches the dumb stuff. You ship.
+
+Once a week or so, you'll run `/audit` — it scans the whole project for things drifting out of shape and explains what it finds like a friendly engineer. Fix what matters. Ignore what doesn't.
+
+---
+
+# Nerd Out
+
+> *For the curious, the technical, and the future debugger. Skip if you just want to build.*
+
+---
+
 ## Why this exists
 
 AI-assisted coding is fast and powerful — but on its own, it's also unsupervised. An AI can put files in the wrong folder, commit secrets by accident, leave debug code behind, or quietly break a feature you can't see. For someone who can't read the code themselves, that's a trust problem.
@@ -23,7 +74,7 @@ If you're a non-technical owner, you get peace of mind. If you're a developer jo
 
 ## A plain-English glossary
 
-A few words show up throughout this README. Definitions first, so the rest reads cleanly:
+A few words show up throughout this section. Definitions first, so the rest reads cleanly:
 
 | Term                                  | What it means in plain English                                                                                                                |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -39,7 +90,7 @@ A few words show up throughout this README. Definitions first, so the rest reads
 
 ## The 15 hooks, explained
 
-Hooks are grouped by **when they run**. Together, they form a pipeline: from the moment a session starts, to the moment Claude finishes a response, the framework is checking the work.
+Hooks are grouped by **when they run**. Together, they form a pipeline: from the moment a session starts to the moment Claude finishes a response, the framework is checking the work.
 
 ### When a session starts
 
@@ -100,7 +151,7 @@ Commands are short instructions you type in Claude Code (starting with `/`) that
 | **`/share`**             | Pushes your branch (if needed) and creates a pull request on GitHub with a plain-language description for reviewers. | When a feature is ready for review and merge.                            | Per feature          |
 | **`/update`**            | Checks GitHub for a newer framework version, shows you the changelog, and installs the update if you confirm. | When the Version Check hook tells you an update is available, or once a month. | Monthly              |
 
-> **A simple rule of thumb.** Use **`/save`** often (it's cheap, it's safe, it's a backup). Use **`/share`** when you want feedback. Use **`/audit`** when you want reassurance that the project is still healthy. Use **`/feature`** any time you start something new — never create feature folders by hand.
+> **A simple rule of thumb.** Use **`/save`** often — it's cheap, it's safe, it's a backup. Use **`/share`** when you want feedback. Use **`/audit`** when you want reassurance that the project is still healthy. Use **`/feature`** any time you start something new — never create feature folders by hand.
 
 ---
 
@@ -132,60 +183,33 @@ src/features/contact-form/
 
 ---
 
-## A typical session, step by step
+## When Claude goes off track (or something gets blocked)
 
-Here's what an ordinary working session looks like — what you see, and what's happening behind the scenes.
+Two things happen sometimes: Claude takes a wrong turn, or a hook stops an action. Here's how to handle each.
 
-1. **You open a terminal and type `claude`.**
-   *Behind the scenes:* The **Session Init** hook creates a new log file in `.claude/sessions/`. The **Version Check** hook quietly pings GitHub for updates.
+### Claude is going in circles — use `/rewind`
 
-2. **You describe what you want.** "Add a contact form that sends an email when someone submits it."
-   *Behind the scenes:* Claude reads `CLAUDE.md` and `PROJECT_LESSONS.md` so it follows your project's conventions and avoids past mistakes.
+If Claude has tried to fix the same thing twice and it's still wrong, **stop**. Don't type another correction. Each correction leaves the broken attempt in the conversation, and Claude starts treating its own broken code as context — which makes things worse, not better.
 
-3. **Claude starts working.** It creates a new feature folder (because you have FDD enabled). If it tried to put the form in `src/components/` instead, the **FDD Guard** would block it and say why.
+Instead, press **Esc** twice (or type `/rewind`). You'll see a menu of recent moves. Jump back to before things went sideways. Then re-prompt with what you learned. You'll get a better answer in less time, and your conversation stays clean.
 
-4. **As Claude saves each file:**
-   - **Auto-Format** cleans up the indentation.
-   - **Auto-Lint** flags any sloppy patterns.
-   - **Console Warning** would catch any leftover `console.log`.
-   - **Architecture Check** confirms the file is in the right place and isn't too long.
-   - **Session Tracker** writes a timestamped line in your session log.
+This is the Claude Code team's #1 tip for course correction. Use it freely — checkpoints are cheap.
 
-5. **Claude finishes its response.**
-   - **Type Check** runs across the project and reports any type errors.
-   - **Test Runner** runs your tests and reports failures.
-   - **Milestone Reminder** nudges you to save if it's been a while.
-   - **Desktop Notify** sends a system notification: "Claude has finished working."
+A useful rule of thumb: **after two failed corrections, rewind.** A clean session with a sharper prompt almost always beats a long session full of dead ends.
 
-6. **You review the result in your browser.** If something's off, you describe the fix; otherwise, you're good.
+### A hook blocked an action — read the message
 
-7. **You type `/save`.**
-   *Behind the scenes:* Claude stages the changes (skipping `.env` and other secrets), writes a plain-language commit message, and pushes. The **Commit Quality** hook checks the staged files one last time — if there's a debug statement or a leaked secret, it blocks the commit and explains what to fix.
+The hook prints a message explaining what it caught. Most of the time the fix is obvious once you read it.
 
-8. **When the feature is ready for review, you type `/share`.** A pull request appears on GitHub with a plain-English summary your collaborators can read.
+**FDD Guard blocked a file write.** The message will say something like *"Components must live in `src/features/<name>/components/`."* This means Claude tried to put a feature file in a shared folder. Ask Claude: *"Use the FDD structure — put it under a feature folder."* If you're starting a new feature, run `/feature <name>` first and try again.
 
-That's it. From your seat, it feels like a conversation. Underneath, fifteen automated checks have already run.
+**Security Guard blocked a file read.** The message will name the file (`.env`, `.pem`, etc.) and say it's not allowed. This is by design — Claude should never see your secrets. If you're documenting environment variables, edit `.env.example` instead.
 
----
+**Config Protection issued a warning.** This isn't a block — just a note that Claude is about to change a linter or formatter config. Almost always, the right move is to fix the broken code rather than weaken the rule. Push back: *"Don't change the config. Fix the underlying issue."*
 
-## What if something gets blocked?
+**Commit Quality refused a commit.** The message lists what's wrong: a `console.log` left in, a string that looks like an API key, or a `--no-verify` attempt. Remove the offending lines and try `/save` again.
 
-A few hooks **block** Claude from continuing until an issue is resolved. Here's how to read what they're telling you.
-
-**FDD Guard blocked a file write.**
-The message will say something like *"Components must live in `src/features/<name>/components/`."* This means Claude tried to put a feature file in a shared folder. The fix is usually to ask Claude: *"Use the FDD structure — put it under a feature folder."* If you're starting a new feature, run `/feature <name>` first and try again.
-
-**Security Guard blocked a file read.**
-The message will name the file (`.env`, `.pem`, etc.) and say it's not allowed. This is by design — Claude should never see your secrets. If you're documenting environment variables, edit `.env.example` instead.
-
-**Config Protection issued a warning.**
-This isn't a block — just a note that Claude is about to change a linter or formatter config. Almost always, the right move is to fix the broken code rather than weaken the rule. If Claude keeps trying to edit the config, push back: *"Don't change the config. Fix the underlying issue."*
-
-**Commit Quality refused a commit.**
-The message will list what's wrong: a `console.log` left in, a string that looks like an API key, or a `--no-verify` attempt. Remove the offending lines and try `/save` again.
-
-**Type Check or Test Runner reported failures.**
-These don't block — they print issues at the end of the response. Read what failed, then ask Claude to fix it. (`"The type check is complaining about X — can you fix it?"` works.)
+**Type Check or Test Runner reported failures.** These don't block — they print issues at the end of the response. Read what failed, then ask Claude to fix it. (`"The type check is complaining about X — can you fix it?"` works.)
 
 When in doubt, the rule is: **don't bypass the hook, fix the underlying issue.** That's what they're there for.
 
