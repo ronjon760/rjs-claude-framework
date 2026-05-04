@@ -25,11 +25,19 @@ It's Tuesday morning. You've had your coffee. You want to add a contact form to 
 
 You open a terminal, type `claude`, and hit enter. The framework has already started today's session log, quietly pinged GitHub to see if there's a newer version of itself, and reminded Claude how your project's folders are organized — before you've finished sitting down.
 
-You type:
+Before you describe the work, you press **Shift + Tab** twice. That puts Claude into **plan mode** — a "let's talk it through first" stance where Claude reads your files, thinks about the work, and proposes a plan *before writing a single line of code*.
+
+> **Why plan mode is a non-negotiable habit.** Anything bigger than a typo deserves a plan. Five minutes of plan-mode discussion catches the wrong-direction work that would have cost you thirty minutes — and a tangled-up conversation — to unwind later. It's where you get to say "yes, that's what I meant" or "no, do it this other way" before any cost is paid. After verification, this is the single biggest quality lever the Anthropic team recommends.
+
+Now you type:
 
 > Add a contact form to the home page that emails me when someone submits it.
 
-Claude gets to work. It creates a new folder under `src/features/contact-form/` — because if it had tried to drop the form in some random place, the **FDD Guard** would have stopped it cold. You watch a few files appear. After each one, the framework auto-formats the code, runs the linter, and notes any leftover debug statements.
+Claude reads your project, then comes back with a plan: it'll create a `contact-form` feature folder, build the form component using your existing input styles, wire up an API route using Resend (the email service it spotted in your `.env.example`), and add a success state. It asks: *"Anything to add or change before I start?"*
+
+You read the plan. Looks good — except you want a honeypot field for bots. You say so. Claude updates the plan and asks again. You approve. *Now* Claude actually gets to work.
+
+It creates a new folder under `src/features/contact-form/` — because if it had tried to drop the form in some random place, the **FDD Guard** would have stopped it cold. You watch a few files appear. After each one, the framework auto-formats the code, runs the linter, and notes any leftover debug statements.
 
 A few minutes later, your laptop pings: *"Claude has finished working."* You pop back in. The form looks great in the browser. But the test email never arrives.
 
@@ -46,6 +54,57 @@ When the feature is ready for review, you type `/share`. Up pops a pull request 
 That's the loop. You describe. Claude builds. The framework catches the dumb stuff. You ship.
 
 Once a week or so, you'll run `/audit` — it scans the whole project for things drifting out of shape and explains what it finds like a friendly engineer. Fix what matters. Ignore what doesn't.
+
+---
+
+## Quick Start
+
+There are two ways in. Pick the one that matches how you like to learn.
+
+### Path 1 — One-liner install (fastest)
+
+If you already trust the framework and just want it running:
+
+```bash
+cd your-project
+bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh)
+```
+
+That's it. The script detects your stack, installs the hooks, generates a tailored `CLAUDE.md`, and turns on FDD by default. Open Claude Code and start describing what you want.
+
+### Path 2 — Read first, install second (recommended for first-timers)
+
+If you'd rather understand what you're installing before you install it, do the tour:
+
+1. **Download the framework** to your computer. Either clone it (`git clone https://github.com/ronjon760/rjs-claude-framework ~/Desktop/RJs-Claude-Framework`) or download the zip from GitHub and unzip it on your Desktop.
+2. **Open your project folder** in Claude Code (`cd your-project && claude`).
+3. **Paste this prompt:**
+
+   > I'd like to review and bring in RJ's Claude Framework — it's a folder on my Desktop at `~/Desktop/RJs-Claude-Framework`. Please educate me on how this works and how it'll help me build more efficiently. Walk me through the hooks, the slash commands, and Feature-Driven Development. When I'm ready, help me run setup.sh in this project.
+
+4. **Talk through it.** Claude will read the framework's files, explain each piece in plain language, and answer any questions. When you're satisfied, ask it to run setup.sh.
+
+Path 2 takes about 15 minutes longer than Path 1, but you'll come out understanding *why* every hook and command exists — which means you'll know how to push back when something feels off later.
+
+### Update an existing installation
+
+From within Claude Code (recommended):
+
+```
+/update
+```
+
+Or from the terminal:
+
+```bash
+bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh) --update
+```
+
+Updates hook scripts, commands, and settings without overwriting your `CLAUDE.md`, `PROJECT_LESSONS.md`, or `architecture.json`. A timestamped backup is created automatically in `.claude/backups/`.
+
+### Version tracking
+
+Every project tracks its framework version in `.claude/.framework-version`. The Version Check hook pings GitHub once per day and notifies you when a newer version is available. See `CHANGELOG.md` for version history.
 
 ---
 
@@ -215,46 +274,6 @@ When in doubt, the rule is: **don't bypass the hook, fix the underlying issue.**
 
 ---
 
-## Quick Start
-
-### Install into an existing project
-
-```bash
-cd your-project
-bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh)
-```
-
-`setup.sh` automatically:
-
-1. Detects your tech stack (Next.js, React, Express, Python, static HTML, mixed).
-2. Installs the appropriate hooks and `.claude/settings.json`.
-3. Generates a `CLAUDE.md` tailored to your project, plus folder-specific guides for `src/features/`, `src/lib/`, etc.
-4. Installs missing dev tools (Prettier, ESLint, etc.) if they're not already there.
-5. Enables FDD by default (unless you pass `--no-fdd`).
-6. Initializes git if the project isn't already a repo.
-
-### Update an existing installation
-
-From within Claude Code (recommended):
-
-```
-/update
-```
-
-Or from the terminal:
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/ronjon760/rjs-claude-framework/main/setup.sh) --update
-```
-
-Updates hook scripts, commands, and settings without overwriting your `CLAUDE.md`, `PROJECT_LESSONS.md`, or `architecture.json`. A timestamped backup is created automatically in `.claude/backups/`.
-
-### Version tracking
-
-Every project tracks its framework version in `.claude/.framework-version`. The Version Check hook pings GitHub once per day and notifies you when a newer version is available. See `CHANGELOG.md` for version history.
-
----
-
 ## Supported stacks
 
 | Stack                             | Formatter     | Linter | Type Checker |
@@ -287,6 +306,13 @@ The setup script detects which of these apply and only installs the relevant too
 ---
 
 ## Session logs and Project Lessons
+
+> **Why is the `.claude` folder hidden?** It starts with a dot, the Unix convention for "configuration folder, please tuck this away." It keeps the framework's plumbing — hooks, commands, settings, session logs — out of your way so you mostly see your own work. The folder isn't secret, just tidied off the visible workspace. Claude Code expects this exact location, so the dot prefix isn't optional.
+>
+> **To see what's in it:**
+> - **Finder (macOS):** press **Cmd + Shift + . (period)** to toggle hidden files.
+> - **VS Code or any code editor:** hidden files are shown by default in the file tree.
+> - **Terminal:** `ls .claude/sessions/` lists every session log; `cat .claude/sessions/<file>.md` reads one.
 
 **Session logs** live in `.claude/sessions/`. Every session creates one, and every file change Claude makes gets timestamped:
 
