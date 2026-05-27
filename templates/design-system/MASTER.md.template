@@ -1,0 +1,135 @@
+# {{PROJECT_NAME}} — Design System
+
+**Style:** {{STYLE_NAME}}
+**Inspiration:** {{INSPIRATION}}
+**Vibe:** {{VIBE_DESCRIPTION}}
+
+---
+
+## Color Palette
+
+### Core Colors
+
+| Role | Hex | {{CSS_MAPPING_HEADER}} | Usage |
+|------|-----|------------------------|-------|
+| Background | `{{BG_COLOR}}` | {{BG_MAPPING}} | Page background |
+| Surface | `{{SURFACE_COLOR}}` | {{SURFACE_MAPPING}} | Cards, modals, inputs |
+| Border | `{{BORDER_COLOR}}` | {{BORDER_MAPPING}} | Card borders, dividers |
+| Text | `{{TEXT_COLOR}}` | {{TEXT_MAPPING}} | Headings, primary text |
+| Text-muted | `{{TEXT_MUTED_COLOR}}` | {{TEXT_MUTED_MAPPING}} | Secondary text, labels |
+| Accent | `{{ACCENT_COLOR}}` | {{ACCENT_MAPPING}} | CTAs, links, active states |
+| Accent-hover | `{{ACCENT_HOVER_COLOR}}` | {{ACCENT_HOVER_MAPPING}} | CTA hover |
+| Accent-soft | `{{ACCENT_SOFT_COLOR}}` | {{ACCENT_SOFT_MAPPING}} | Accent backgrounds |
+
+{{FRAMEWORK_CONFIG_COLORS}}
+
+---
+
+## Typography
+
+### Font Stack
+
+| Role | Font | Weight | Size (desktop) | Size (mobile) |
+|------|------|--------|----------------|---------------|
+| Display | {{HEADING_FONT}} | 700 | 48-64px | 32-40px |
+| H1 | {{HEADING_FONT}} | 600 | 36-48px | 28-32px |
+| H2 | {{HEADING_FONT}} | 600 | 28-32px | 22-26px |
+| H3 | {{HEADING_FONT}} | 500 | 20-24px | 18-20px |
+| Body | {{BODY_FONT}} | 400 | 16px | 16px |
+| Body-sm | {{BODY_FONT}} | 400 | 14px | 14px |
+| Label | {{BODY_FONT}} | 500 | 12-14px | 12px |
+
+{{FRAMEWORK_CONFIG_FONTS}}
+
+### Google Fonts Import
+
+```css
+@import url('https://fonts.googleapis.com/css2?family={{HEADING_FONT_URL}}&family={{BODY_FONT_URL}}&display=swap');
+```
+
+### Line Heights
+- Headings: 1.2
+- Body: 1.6
+- Labels: 1.4
+
+### Letter Spacing
+- Display/H1: -0.02em
+- Body: 0 (default)
+- Labels/Caps: 0.05em
+
+---
+
+## Spacing & Layout
+
+| Property | Value |
+|----------|-------|
+| Border radius (cards) | {{CARD_RADIUS}} |
+| Border radius (buttons) | {{BUTTON_RADIUS}} |
+| Border radius (inputs) | {{INPUT_RADIUS}} |
+| Card shadow | {{CARD_SHADOW}} |
+| Card shadow (hover) | {{CARD_SHADOW_HOVER}} |
+| Section spacing | {{SECTION_SPACING}} |
+| Card padding | {{CARD_PADDING}} |
+| Max content width | {{MAX_WIDTH}} |
+| Responsive breakpoints | 375px, 768px, 1024px, 1440px |
+
+---
+
+## Motion / Animation
+
+### Specs
+
+| Animation | Duration | Easing | Trigger |
+|-----------|----------|--------|---------|
+| Page transition | 300ms | ease-out | Route change |
+| Card entrance | 400ms | ease-out | Scroll into view |
+| Staggered list | 100ms gap | ease-out | Scroll / data load |
+| Hover lift | 200ms | ease | Mouse enter |
+| Button press | 150ms | ease | Mouse down |
+
+### Rules
+- All animations respect `prefers-reduced-motion`
+- No GPU-heavy effects
+- Use `transform` and `opacity` only for hardware acceleration
+{{MOTION_FRAMEWORK_RULES}}
+
+{{MOTION_CODE_PATTERNS}}
+
+---
+
+## Component Sources
+
+- **shadcn/ui** — Base primitives (Button, Input, Card, Dialog, etc.)
+- **21st.dev** — Search for polished variants before building custom
+- **Custom** — Only when no suitable primitive exists
+
+### Discovery Pattern
+Before building any new component:
+1. Check shadcn/ui for a base primitive
+2. Search 21st.dev for a polished variant matching the design system
+3. Only build custom if neither source has what you need
+
+### Component Patterns
+
+| Component | Style | Source |
+|-----------|-------|--------|
+| Cards | {{CARD_STYLE}} | 21st.dev |
+| Buttons (primary) | {{BUTTON_PRIMARY_STYLE}} | 21st.dev |
+| Buttons (secondary) | {{BUTTON_SECONDARY_STYLE}} | 21st.dev |
+| Inputs | {{INPUT_STYLE}} | 21st.dev |
+| Icons | Lucide React (no emojis as icons) | lucide-react |
+
+---
+
+## Pre-Delivery Checklist
+
+- [ ] No emojis used as icons (use SVG icon library)
+- [ ] cursor-pointer on all clickable elements
+- [ ] Hover states with smooth transitions (150-300ms)
+- [ ] Text contrast 4.5:1 minimum (WCAG AA)
+- [ ] Focus states visible for keyboard navigation
+- [ ] prefers-reduced-motion respected
+- [ ] Responsive tested: 375px, 768px, 1024px, 1440px
+- [ ] Accent color consistent across all interactive elements
+- [ ] Selected fonts loaded correctly
+{{STACK_SPECIFIC_CHECKLIST}}

@@ -13,6 +13,7 @@
 # 8. Type safety issues (any, untyped)
 # 9. Hardcoded secrets/URLs
 # 10. Import boundary violations
+# 11. Design system compliance
 
 set -e
 
@@ -362,6 +363,51 @@ if [ -f "$ARCH_CONFIG" ] && grep -q '"fdd"' "$ARCH_CONFIG" && grep -q '"enabled"
     fi
   done
   [ "$SCREEN_ISSUES" -eq 0 ] && ok "Screen files are appropriately sized"
+fi
+
+# ──────────────────────────────────────────
+# DESIGN SYSTEM COMPLIANCE
+# ──────────────────────────────────────────
+if [ -f "$ARCH_CONFIG" ] && grep -q '"design_system"' "$ARCH_CONFIG" 2>/dev/null; then
+  DS_ENABLED=$(grep -A 5 '"design_system"' "$ARCH_CONFIG" | grep '"enabled"' | grep -c 'true')
+  if [ "$DS_ENABLED" -gt 0 ]; then
+    section "Design System Compliance"
+    if [ -f "design-system/MASTER.md" ]; then
+      ok "design-system/MASTER.md exists"
+      grep -q "## Color Palette" design-system/MASTER.md && ok "Color palette defined" || warn "MASTER.md missing Color Palette section"
+      grep -q "## Typography" design-system/MASTER.md && ok "Typography defined" || warn "MASTER.md missing Typography section"
+      grep -q "## Motion" design-system/MASTER.md && ok "Motion/Animation defined" || warn "MASTER.md missing Motion/Animation section"
+      grep -q "## Component" design-system/MASTER.md && ok "Component patterns defined" || warn "MASTER.md missing Component Patterns section"
+    else
+      warn "design-system/MASTER.md not found — run /design to create it"
+    fi
+  fi
+fi
+
+# ──────────────────────────────────────────
+# VISION & PLANNING COMPLIANCE
+# ──────────────────────────────────────────
+section "Vision & Planning"
+
+if [ -f "docs/VISION.md" ]; then
+  ok "docs/VISION.md exists"
+  grep -q "## North Star" docs/VISION.md && ok "North Star defined" || warn "VISION.md missing North Star section"
+  grep -q "## MVP" docs/VISION.md && ok "MVP defined" || warn "VISION.md missing MVP section"
+  grep -q "## Tech Stack" docs/VISION.md && ok "Tech Stack defined" || warn "VISION.md missing Tech Stack section"
+  grep -q "## Phases" docs/VISION.md && ok "Phases defined" || warn "VISION.md missing Phases section"
+else
+  warn "docs/VISION.md not found — run /vision to create it"
+fi
+
+if [ -d "docs/plans" ]; then
+  PLAN_COUNT=$(ls docs/plans/*.md 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$PLAN_COUNT" -gt 0 ]; then
+    ok "$PLAN_COUNT build plan(s) found in docs/plans/"
+  else
+    warn "docs/plans/ exists but is empty — run /buildplan to generate plans"
+  fi
+else
+  warn "No build plans found — run /buildplan after /vision and /design"
 fi
 
 # ──────────────────────────────────────────

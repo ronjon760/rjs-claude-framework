@@ -9,7 +9,7 @@ set -e
 # ============================================================
 
 REPO_URL="https://github.com/ronjon760/rjs-claude-framework.git"
-FRAMEWORK_VERSION="1.6.0"
+FRAMEWORK_VERSION="2.1.0"
 
 # Resolve the directory where this script lives (for local installs)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -192,6 +192,15 @@ generate_static_html_settings() {
           {
             "type": "command",
             "command": "bash .claude/hooks/session-init.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-plan-reminder.sh"
           }
         ]
       }
@@ -648,6 +657,13 @@ $(echo -e "$DIRECTORY_MAP")
 - **No build system** — This is intentionally a zero-dependency static site. Do not add npm, webpack, or frameworks.
 - See \`.claude/architecture.json\` for specific rules and boundaries.
 
+## Behavioral Guidelines (Karpathy Principles)
+
+1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If multiple interpretations exist, present them. If a simpler approach exists, say so.
+2. **Simplicity First** — No features beyond what was asked. No abstractions for single-use code. If you write 200 lines and it could be 50, rewrite it.
+3. **Surgical Changes** — Don't "improve" adjacent code, comments, or formatting. Match existing style. Every changed line traces directly to the request.
+4. **Goal-Driven Execution** — Transform tasks into verifiable goals. For multi-step tasks, state a plan with verification checkpoints.
+
 ## Conventions
 - All CSS is inline in \`<style>\` tags within each HTML file (unless a shared CSS file exists)
 - Keep HTML files self-contained — each page has its own styles
@@ -666,6 +682,9 @@ $(echo -e "$DIRECTORY_MAP")
 - Explain WHAT changed, WHY it matters, and WHAT it means for the project — not just technical details.
 
 ## Commands
+- \`/vision\` — Define your project's vision, scope, and tech stack
+- \`/design\` — Create or update the project's design system
+- \`/buildplan\` — Generate a detailed build plan from your vision and design docs
 - \`/audit\` — Check the project for code quality and architecture issues
 - \`/save\` — Save your work (commits and pushes to GitHub)
 - \`/share\` — Share your work for review (creates a pull request)
@@ -678,6 +697,9 @@ $(echo -e "$DIRECTORY_MAP")
 ## References
 - \`PROJECT_LESSONS.md\` — Corrections and learnings
 - \`.claude/architecture.json\` — Architecture rules
+- \`docs/VISION.md\` — Project vision and scope (run \`/vision\` to create)
+- \`design-system/MASTER.md\` — Design tokens and visual guidelines (run \`/design\` to create)
+- \`docs/plans/\` — Build plans by phase (run \`/buildplan\` to create)
 $(echo -e "$EXTRA_REFS")
 CLAUDEEOF
     else
@@ -699,12 +721,27 @@ $(echo -e "$DIRECTORY_MAP")
 ## Environment Variables
 $(echo -e "$ENV_VARS")
 
+## Behavioral Guidelines (Karpathy Principles)
+
+1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If multiple interpretations exist, present them. If a simpler approach exists, say so.
+2. **Simplicity First** — No features beyond what was asked. No abstractions for single-use code. If you write 200 lines and it could be 50, rewrite it.
+3. **Surgical Changes** — Don't "improve" adjacent code, comments, or formatting. Match existing style. Every changed line traces directly to the request.
+4. **Goal-Driven Execution** — Transform tasks into verifiable goals. For multi-step tasks, state a plan with verification checkpoints.
+
 ## Common Mistakes to Avoid
 - Do not weaken linting or formatting configs to suppress errors — fix the source code
 - Do not commit console.log, debugger, or print() statements
 - Do not hardcode API keys, tokens, or secrets — use environment variables
 - Do not modify files in node_modules/, .next/, dist/, or build/
 - Do not create new utility functions without first checking if one already exists
+
+## Commands
+- \`/vision\` — Define your project's vision, scope, and tech stack
+- \`/design\` — Create or update the project's design system
+- \`/buildplan\` — Generate a detailed build plan from your vision and design docs
+- \`/audit\` — Check the project for code quality and architecture issues
+- \`/save\` — Save your work (commits and pushes to GitHub)
+- \`/share\` — Share your work for review (creates a pull request)
 
 ## Session Workflow
 - Changes are auto-tracked in \`.claude/sessions/\`
@@ -713,6 +750,9 @@ $(echo -e "$ENV_VARS")
 
 ## References
 - \`PROJECT_LESSONS.md\` — Corrections and learnings
+- \`docs/VISION.md\` — Project vision and scope (run \`/vision\` to create)
+- \`design-system/MASTER.md\` — Design tokens and visual guidelines (run \`/design\` to create)
+- \`docs/plans/\` — Build plans by phase (run \`/buildplan\` to create)
 $(echo -e "$EXTRA_REFS")
 CLAUDEEOF
     fi
@@ -803,6 +843,17 @@ generate_architecture_config() {
       "utils": "Feature-specific utilities",
       "handlers": "Event handlers extracted from components"
     }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
   }
 }
 ARCHEOF
@@ -864,6 +915,17 @@ ARCHEOF
       "utils": "Feature-specific utilities",
       "handlers": "Event handlers extracted from components"
     }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
   }
 }
 ARCHEOF
@@ -923,6 +985,17 @@ ARCHEOF
       "utils": "Feature-specific utilities",
       "serializers": "Data serialization"
     }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
   }
 }
 ARCHEOF
@@ -989,6 +1062,17 @@ ARCHEOF
       "utils": "Feature-specific utilities",
       "handlers": "Event handlers extracted from components"
     }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
   }
 }
 ARCHEOF
@@ -1013,6 +1097,17 @@ ARCHEOF
   },
   "structure": {
     "root": "HTML pages, images, and config files at project root"
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["CSS", "custom"]
   }
 }
 ARCHEOF
@@ -1060,6 +1155,17 @@ ARCHEOF
       "utils": "Feature-specific utilities",
       "handlers": "Event handlers extracted from components"
     }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
   }
 }
 ARCHEOF
@@ -1241,7 +1347,8 @@ main() {
     echo -e "  ${BOLD}Next steps:${NC}"
     echo "  1. Open your terminal in this directory"
     echo "  2. Type: claude"
-    echo "  3. Describe what you want to build"
+    echo "  3. Run /vision → /design → /buildplan to plan your project"
+    echo "  4. Describe what you want to build"
     echo ""
     echo "  The framework handles the rest automatically."
     echo ""

@@ -16,7 +16,7 @@ Then introduce the project in a friendly, plain-language way:
 - How is it organized? (list the main folders and what's in each)
 - How do I run it? (the exact commands to get started)
 - What's automated? (explain that hooks handle formatting, linting, type checking, and security automatically — they don't need to think about it)
-- What commands are available? Explain /audit, /save, /share
+- What commands are available? Explain /vision, /design, /buildplan, /audit, /save, /share — and the recommended flow: /vision → /design → /buildplan
 - Any important lessons? (from PROJECT_LESSONS.md)
 - What's the current state? Offer to run /audit to show project health
 

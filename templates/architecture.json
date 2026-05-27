@@ -49,5 +49,16 @@
       "utils": "Feature-specific utilities",
       "handlers": "Event handlers extracted from components"
     }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
   }
 }

@@ -23,6 +23,16 @@ Copy `.env.example` to `.env.local` and fill in values.
 - **Types co-located** — Define types near the code that uses them. Shared types go in lib/types.
 - **Search before creating** — Always check if a utility, component, or pattern already exists before building a new one.
 - See `.claude/architecture.json` for specific rules and boundaries.
+
+## Behavioral Guidelines (Karpathy Principles)
+
+1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If multiple interpretations exist, present them. If a simpler approach exists, say so.
+
+2. **Simplicity First** — No features beyond what was asked. No abstractions for single-use code. If you write 200 lines and it could be 50, rewrite it. No error handling for impossible scenarios.
+
+3. **Surgical Changes** — Don't "improve" adjacent code, comments, or formatting. Match existing style. Every changed line traces directly to the request. Mention (don't delete) unrelated dead code.
+
+4. **Goal-Driven Execution** — Transform tasks into verifiable goals. Write tests first. For multi-step tasks, state a plan with verification checkpoints.
 {{FDD_SECTION}}
 
 ## Conventions
@@ -47,10 +57,13 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Structure summaries with: "What changed" → "Why we did it" → "What this means for you"
 
 ## Commands
-- `/test` — Write and run tests for your code (tests first, then implementation)
-- `/audit` — Check the project for code quality and architecture issues
+- `/vision` — Define your project's vision, scope, and tech stack
+- `/design` — Create or update the project's design system
+- `/buildplan` — Generate a detailed build plan from your vision and design docs
 - `/feature <name>` — Scaffold a new feature folder with FDD structure
 - `/quickref <name>` — Generate or update documentation for a feature
+- `/test` — Write and run tests for your code (tests first, then implementation)
+- `/audit` — Check the project for code quality and architecture issues
 - `/save` — Save your work (commits and pushes to GitHub)
 - `/share` — Share your work for review (creates a pull request)
 
@@ -62,4 +75,7 @@ Copy `.env.example` to `.env.local` and fill in values.
 ## References
 - `PROJECT_LESSONS.md` — Corrections and learnings from past sessions
 - `.claude/architecture.json` — Architecture rules and boundaries
+- `docs/VISION.md` — Project vision, scope, and tech stack (run `/vision` to create)
+- `design-system/MASTER.md` — Design tokens and visual guidelines (run `/design` to create)
+- `docs/plans/` — Build plans by phase (run `/buildplan` to create)
 {{EXTRA_REFS}}

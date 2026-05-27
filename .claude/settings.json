@@ -15,6 +15,15 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash .claude/hooks/session-plan-reminder.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
             "command": "bash .claude/hooks/version-check.sh"
           }
         ]

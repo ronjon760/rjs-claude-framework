@@ -1,0 +1,64 @@
+# {{PROJECT_NAME}}
+
+> {{ONE_LINE_DESCRIPTION}}
+
+## North Star
+
+{{NORTH_STAR_STATEMENT}}
+
+## Product Arc
+
+{{PRODUCT_ARC}}
+
+---
+
+## Problem
+
+{{PROBLEM_STATEMENT}}
+
+## Target Audience
+
+{{AUDIENCE_PERSONA}}
+
+## MVP (Phase 1)
+
+{{MVP_DEFINITION}}
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+{{TECH_STACK_TABLE}}
+
+---
+
+## Phases
+
+### Phase 1: {{PHASE_1_NAME}} — {{PHASE_1_DESCRIPTION}}
+
+{{PHASE_1_DETAIL}}
+
+### Phase 2: {{PHASE_2_NAME}} — {{PHASE_2_DESCRIPTION}}
+
+{{PHASE_2_DETAIL}}
+
+### Phase 3: {{PHASE_3_NAME}} — {{PHASE_3_DESCRIPTION}}
+
+{{PHASE_3_DETAIL}}
+
+---
+
+## Success Metrics
+
+{{SUCCESS_METRICS}}
+
+---
+
+## References
+
+- `design-system/MASTER.md` — Visual design system (run `/design` to create)
+- `docs/plans/` — Detailed build plans by phase (run `/buildplan` to create)
+- `.claude/architecture.json` — Architecture rules and boundaries
+- `PROJECT_LESSONS.md` — Corrections and learnings from past sessions
