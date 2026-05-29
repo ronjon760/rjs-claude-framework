@@ -28,15 +28,24 @@ From the description, infer these four dimensions:
 
 Based on the inferred industry and product type, select recommendations using the reference tables below. Then present your recommendations as a summary for the user to confirm or override.
 
+**Commit to a conviction, not a safe default.** The goal is a distinctive, production-grade
+direction — not generic AI output. Pick ONE bold creative direction and commit to it:
+a dominant tone with one sharp accent, a characterful (not default) font, and one or
+two unexpected compositional moments. Avoid the generic-AI traps: Inter/Roboto/Arial
+as primary fonts, purple-on-white gradients, timid evenly-distributed palettes, and
+predictable layouts. (This mirrors the `frontend-design` skill, which executes within
+this conviction at build time — see "Design Lanes" below.)
+
 Present it like this:
 
 ```
 Based on your description, here's what I'm thinking:
 
 **Style:** [style name]
-**Palette direction:** [brief description with primary and accent colors]
-**Fonts:** [heading font] (headings) + [body font] (body)
-**Animation approach:** [brief description]
+**Design Conviction:** [one committed creative direction in a sentence — the bold idea everything serves]
+**Palette direction:** [dominant tone + one sharp accent, with primary and accent colors]
+**Fonts:** [distinctive heading font] (headings) + [refined body font] (body)
+**Animation approach:** [brief description, using custom easing curves]
 **Component source:** shadcn/ui primitives + 21st.dev polished variants
 
 Does this feel right? You can:
@@ -69,6 +78,26 @@ Create the `design-system/` directory and write `design-system/MASTER.md` follow
 **Style:** [style name]
 **Inspiration:** [reference site or aesthetic]
 **Vibe:** [3-4 adjective description]
+
+---
+
+## Design Conviction
+
+> The one committed creative direction for this project. Every UI decision serves
+> it. The `frontend-design` skill executes *within* this conviction — it sharpens
+> craft and distinctiveness but does not override the choices locked below.
+
+**Commit to:** [one bold, specific creative direction — the idea everything serves]
+
+**Avoid (anti-generic guardrails):**
+- Generic defaults: no Inter / Roboto / Arial as primary fonts; no purple-on-white clichés.
+- Timid, evenly-distributed palettes — commit to a dominant tone + one sharp accent.
+- Predictable, perfectly-symmetrical layouts everywhere — earn one or two confident,
+  unexpected compositional moments per page.
+- Scattered micro-animations — prefer one well-orchestrated high-impact moment over many small ones.
+
+**See also:** `docs/design-lanes.md` for how `/design`, `frontend-design`, and
+`ui-ux-pro-max` divide responsibility.
 
 ---
 
@@ -147,14 +176,28 @@ Create the `design-system/` directory and write `design-system/MASTER.md` follow
 
 | Animation | Duration | Easing | Trigger |
 |-----------|----------|--------|---------|
-| Page transition | 300ms | ease-out | Route change |
-| Card entrance | 400ms | ease-out | Scroll into view |
-| Staggered list | 100ms gap | ease-out | Scroll / data load |
-| Hover lift | 200ms | ease | Mouse enter |
-| Button press | 150ms | ease | Mouse down |
+| Page transition | 300ms | `--ease-out` | Route change |
+| Card entrance | 400ms | `--ease-out` | Scroll into view |
+| Staggered list | 60ms gap | `--ease-out` | Scroll / data load |
+| Hover lift | 200ms | `--ease` (default) | Mouse enter |
+| Button press | 150ms | `--ease-out` | Mouse down |
+
+### Easing Curves
+
+Built-in CSS easings are too weak. Use these custom curves as tokens.
+**Never use `ease-in` for UI** — it delays the first frame the user is watching.
+
+```css
+--ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* entrances, exits, presses */
+--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* on-screen movement / morphs */
+--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* sheets, drawers, panels */
+```
+
+[For Tailwind projects, also extend `transitionTimingFunction` with these curves.]
 
 ### Rules
 - All animations respect `prefers-reduced-motion`
+- Keep UI animations under 300ms (a 180ms dropdown feels more responsive than a 400ms one)
 - No GPU-heavy effects (blur, 3D transforms in bulk)
 - Use `transform` and `opacity` only for hardware acceleration
 [For React/Next.js: - Import from `motion/react` (Motion v12 — NOT `framer-motion`)]
@@ -219,6 +262,8 @@ Before building any new component:
 - [ ] Responsive tested: 375px, 768px, 1024px, 1440px
 - [ ] Accent color consistent across all interactive elements
 - [ ] Selected fonts loaded correctly
+- [ ] Output serves the Design Conviction (distinctive, not generic AI default)
+- [ ] Custom easing curves used (no weak built-in `ease-in`/`ease-out` on key motion)
 [Stack-specific items as appropriate]
 ```
 
@@ -231,6 +276,25 @@ After generating MASTER.md:
    > Design system created at `design-system/MASTER.md`. Every session will now reference this for consistent UI decisions. Run `/design` again anytime to update it.
 3. If `docs/VISION.md` exists but `docs/plans/` does not exist (or is empty):
    > Your vision and design are defined — ready to plan the build? Run `/buildplan` to generate your Phase 1 implementation plan.
+
+---
+
+## Design Lanes (how this fits with the design skills)
+
+`/design` is one of three design tools. They do **different jobs** — keep them in lane:
+
+- **DECIDE — `/design` (this command).** Runs once. **Owns `design-system/MASTER.md`** —
+  the single source of truth. Bakes a bold **Design Conviction** into it.
+- **EXECUTE — `frontend-design` (Anthropic skill).** Fires on every UI build. Pushes for
+  distinctive, anti-"AI-slop" execution **within** the conviction MASTER.md locked —
+  it does not override the chosen palette/fonts.
+- **REFERENCE — `ui-ux-pro-max` (skill).** Deep catalog of palettes/fonts/styles, pulled
+  **on demand** when these tables aren't enough. **Never generates MASTER.md.**
+
+If `frontend-design` is installed, the conviction baked into MASTER.md is what keeps the
+two from fighting at build time: the skill executes the bold direction instead of
+overriding a timid one. The framework installs `frontend-design` automatically via
+`setup.sh`. Full write-up: `docs/design-lanes.md`.
 
 ---
 
@@ -289,6 +353,12 @@ Use these tables to make informed design recommendations. These are curated sele
 | Plus Jakarta Sans | Plus Jakarta Sans | Rounded, friendly | SaaS, health, education |
 | Geist | Geist | Technical, monospaced feel | Developer tools, dashboards |
 
+> **Anti-generic note:** Inter and Geist are neutral utility faces — fine for dense
+> dashboards, but **avoid them as the primary identity font** for marketing/brand
+> surfaces. Pick a distinctive display face (Fraunces, Clash Display, Cabinet Grotesk,
+> Bricolage Grotesque, Playfair) so the project doesn't read as generic AI output.
+> Never default to Roboto or Arial.
+
 ### Animation Approach by Style
 
 | Style | Motion Philosophy | Key Patterns |
@@ -299,7 +369,12 @@ Use these tables to make informed design recommendations. These are curated sele
 | Brutalism | Instant, glitchy, unconventional | Snap transitions, no easing, abrupt |
 | Dark Luxe | Cinematic, dramatic, slow | Long fades (600ms+), scale reveals, glow effects |
 | Flat Design | Clean, predictable, functional | Standard ease-out, consistent timing |
-| Bento Grid | Staggered, grid-aware, cascading | Staggered children (100ms gaps), scale-in cards |
+| Bento Grid | Staggered, grid-aware, cascading | Staggered children (60ms gaps), scale-in cards |
+
+> **Easing note:** Whatever the style, implement motion with the **custom easing
+> curves** from the Motion section (`--ease-out`, `--ease-in-out`, `--ease-drawer`),
+> not the weak built-in CSS easings. Keep UI animations under 300ms and stagger gaps
+> short (30–80ms). Never use `ease-in` for UI.
 
 ### Component Radius by Style
 

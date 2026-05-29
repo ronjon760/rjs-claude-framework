@@ -188,6 +188,17 @@ if [ "$LANGUAGE" = "unknown" ]; then
   fi
 fi
 
+# --- SaaS Shape Detection ---
+# A stack is "SaaS-shaped" if it can plausibly serve users over the web with state.
+# Used to gate compliance-doc scaffolding (Privacy Policy, ToS, subprocessor list).
+
+IS_SAAS_STACK=false
+case "$FRAMEWORK" in
+  nextjs|nuxt|svelte|astro|gatsby|vite|create-react-app|express|django|fastapi|flask|react-native-expo)
+    IS_SAAS_STACK=true
+    ;;
+esac
+
 # --- Project Size Metrics (for FDD suggestion) ---
 
 FILE_COUNT=0
@@ -238,3 +249,4 @@ echo "FILE_COUNT='$FILE_COUNT'"
 echo "SCREEN_PAGE_COUNT='$SCREEN_PAGE_COUNT'"
 echo "LARGEST_FILE_LINES='$LARGEST_FILE_LINES'"
 echo "FDD_SUGGESTED='$FDD_SUGGESTED'"
+echo "IS_SAAS_STACK='$IS_SAAS_STACK'"

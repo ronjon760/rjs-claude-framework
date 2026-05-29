@@ -6,6 +6,26 @@
 
 ---
 
+## Design Conviction
+
+> The one committed creative direction for this project. Every UI decision serves
+> it. The `frontend-design` skill executes *within* this conviction — it sharpens
+> craft and distinctiveness but does not override the choices locked below.
+
+**Commit to:** {{DESIGN_CONVICTION}}
+
+**Avoid (anti-generic guardrails):**
+- Generic defaults: no Inter / Roboto / Arial as primary fonts; no purple-on-white clichés.
+- Timid, evenly-distributed palettes — commit to a dominant tone + one sharp accent.
+- Predictable, perfectly-symmetrical layouts everywhere — earn one or two confident,
+  unexpected compositional moments per page.
+- Scattered micro-animations — prefer one well-orchestrated high-impact moment over many small ones.
+
+**See also:** `docs/design-lanes.md` for how `/design`, `frontend-design`, and
+`ui-ux-pro-max` divide responsibility.
+
+---
+
 ## Color Palette
 
 ### Core Colors
@@ -81,14 +101,29 @@
 
 | Animation | Duration | Easing | Trigger |
 |-----------|----------|--------|---------|
-| Page transition | 300ms | ease-out | Route change |
-| Card entrance | 400ms | ease-out | Scroll into view |
-| Staggered list | 100ms gap | ease-out | Scroll / data load |
-| Hover lift | 200ms | ease | Mouse enter |
-| Button press | 150ms | ease | Mouse down |
+| Page transition | 300ms | `--ease-out` | Route change |
+| Card entrance | 400ms | `--ease-out` | Scroll into view |
+| Staggered list | 60ms gap | `--ease-out` | Scroll / data load |
+| Hover lift | 200ms | `--ease` (default) | Mouse enter |
+| Button press | 150ms | `--ease-out` | Mouse down |
+
+### Easing Curves
+
+The built-in CSS easings are too weak — they lack the punch that makes motion feel
+intentional. Use these custom curves as tokens. **Never use `ease-in` for UI** (it
+delays the first frame the user is watching, so it feels sluggish).
+
+```css
+--ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* entrances, exits, presses */
+--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* on-screen movement / morphs */
+--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* sheets, drawers, panels */
+```
+
+{{EASING_FRAMEWORK_CONFIG}}
 
 ### Rules
 - All animations respect `prefers-reduced-motion`
+- Keep UI animations under 300ms (a 180ms dropdown feels more responsive than a 400ms one)
 - No GPU-heavy effects
 - Use `transform` and `opacity` only for hardware acceleration
 {{MOTION_FRAMEWORK_RULES}}
@@ -132,4 +167,6 @@ Before building any new component:
 - [ ] Responsive tested: 375px, 768px, 1024px, 1440px
 - [ ] Accent color consistent across all interactive elements
 - [ ] Selected fonts loaded correctly
+- [ ] Output serves the Design Conviction (distinctive, not generic AI default)
+- [ ] Custom easing curves used (no weak built-in `ease-in`/`ease-out` on key motion)
 {{STACK_SPECIFIC_CHECKLIST}}

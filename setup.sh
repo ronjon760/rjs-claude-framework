@@ -9,7 +9,7 @@ set -e
 # ============================================================
 
 REPO_URL="https://github.com/ronjon760/rjs-claude-framework.git"
-FRAMEWORK_VERSION="2.1.0"
+FRAMEWORK_VERSION="2.3.0"
 
 # Resolve the directory where this script lives (for local installs)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -78,13 +78,14 @@ detect_stack() {
     HAS_TYPESCRIPT=false
     HAS_PRETTIER=false
     HAS_ESLINT=false
+    IS_SAAS_STACK=false
     INSTALL_CMD=""
     RUN_CMD=""
 
     if [ -f "package.json" ]; then
       LANGUAGE="javascript"
       [ -f "tsconfig.json" ] && LANGUAGE="typescript" && HAS_TYPESCRIPT=true
-      grep -q '"next"' package.json 2>/dev/null && FRAMEWORK="nextjs"
+      grep -q '"next"' package.json 2>/dev/null && FRAMEWORK="nextjs" && IS_SAAS_STACK=true
       PACKAGE_MANAGER="npm"
       INSTALL_CMD="npm install"
       RUN_CMD="npm run dev"
@@ -141,6 +142,57 @@ detect_fdd_candidate() {
   # FDD is on by default for all other stacks (--fdd retained for back-compat)
   FDD_ENABLED=true
   print_step "FDD enabled (default — pass --no-fdd to opt out)"
+}
+
+generate_compliance_starters() {
+  # Copy SMB-tier compliance starter docs into the project.
+  # Called only when IS_SAAS_STACK=true and the user opted in (or --compliance flag passed).
+
+  local SRC_DIR="$TEMP_DIR/framework/templates/docs/compliance"
+
+  if [ ! -d "$SRC_DIR" ]; then
+    print_warn "Compliance templates not found in framework — skipping"
+    return
+  fi
+
+  # docs/compliance/ — reference docs + IR plan template
+  mkdir -p docs/compliance
+  if [ ! -f "docs/compliance/README.md" ]; then
+    cp "$SRC_DIR/README.md" docs/compliance/README.md
+    print_step "Created: docs/compliance/README.md"
+  fi
+  if [ ! -f "docs/compliance/compliance-landscape.md" ]; then
+    cp "$SRC_DIR/compliance-landscape.md" docs/compliance/compliance-landscape.md
+    print_step "Created: docs/compliance/compliance-landscape.md (reference)"
+  fi
+  if [ ! -f "docs/compliance/incident-response.template.md" ]; then
+    cp "$SRC_DIR/incident-response.template.md" docs/compliance/incident-response.template.md
+    print_step "Created: docs/compliance/incident-response.template.md"
+  fi
+
+  # docs/legal/ — public-facing legal templates
+  mkdir -p docs/legal
+  for tmpl in privacy-policy terms-of-service acceptable-use-policy subprocessors; do
+    if [ ! -f "docs/legal/${tmpl}.template.md" ]; then
+      cp "$SRC_DIR/${tmpl}.template.md" "docs/legal/${tmpl}.template.md"
+      print_step "Created: docs/legal/${tmpl}.template.md"
+    fi
+  done
+
+  # Flip compliance.enabled to true in architecture.json + stamp last_reviewed
+  if [ -f ".claude/architecture.json" ]; then
+    python3 -c "
+import json, datetime, sys
+path = '.claude/architecture.json'
+with open(path) as f: data = json.load(f)
+data.setdefault('compliance', {})
+data['compliance']['enabled'] = True
+data['compliance']['last_reviewed'] = datetime.date.today().isoformat()
+with open(path, 'w') as f: json.dump(data, f, indent=2)
+" 2>/dev/null || print_warn "Could not update architecture.json compliance block — edit manually"
+  fi
+
+  COMPLIANCE_ENABLED=true
 }
 
 generate_fdd_structure() {
@@ -325,6 +377,11 @@ install_framework() {
   cp "$TEMP_DIR/framework/.claude/commands/"*.md .claude/commands/
   print_step "Installed: .claude/commands/ (/audit, /save, /share, /test, /update)"
 
+  # Copy design lanes reference doc (always overwrite — framework-managed guidance)
+  mkdir -p docs
+  cp "$TEMP_DIR/framework/templates/docs/design-lanes.md" docs/design-lanes.md
+  print_step "Installed: docs/design-lanes.md (how /design, frontend-design, ui-ux-pro-max fit)"
+
   # Copy/generate settings.json (overwrite on update, no-clobber on fresh install)
   if [ "$UPDATE_MODE" = "true" ] || [ ! -f ".claude/settings.json" ]; then
     if [ "$FRAMEWORK" = "static-html" ]; then
@@ -371,8 +428,49 @@ install_framework() {
     print_step "Configured: Feature-Driven Development (FDD)"
   fi
 
+  # Generate compliance starter docs (opt-out, only for SaaS-shape stacks, not in update mode)
+  if [ "$UPDATE_MODE" != "true" ] && [ "$IS_SAAS_STACK" = "true" ] && [ "$NO_COMPLIANCE_FLAG" != "true" ]; then
+    if [ ! -d "docs/legal" ] && [ ! -d "docs/compliance" ]; then
+      echo ""
+      echo -e "${BOLD}Compliance starter docs${NC}"
+      echo "  Generates a Privacy Policy, Terms of Service, AUP, subprocessor list,"
+      echo "  and one-page incident response plan — sized for SMB SaaS."
+      echo "  You can refine these later with the /compliance slash command."
+      echo ""
+      read -p "  Generate compliance starter docs? [Y/n] " -r COMPLIANCE_REPLY
+      if [[ ! "$COMPLIANCE_REPLY" =~ ^[Nn]$ ]]; then
+        generate_compliance_starters
+        print_step "Configured: Compliance starter docs (SMB tier)"
+      else
+        print_warn "Skipped compliance starters — run /compliance later to opt in"
+      fi
+    fi
+  fi
+
   # Generate hierarchical CLAUDE.md files for subdirectories (never overwrite)
   generate_hierarchical_claude_md "$TEMP_DIR/framework"
+
+  # Install design skills (frontend-design) — non-fatal if offline / no node
+  install_skills
+}
+
+# ---- Design Skills ----
+# Installs Anthropic's official frontend-design skill (the EXECUTE lane that pairs
+# with the /design wizard's DECIDE lane). Project-level, idempotent, non-fatal.
+# See templates/design-system + .claude/commands/design.md "Design Lanes".
+install_skills() {
+  if ! command -v npx >/dev/null 2>&1; then
+    print_warn "Skipped frontend-design skill — npx/node not found (install Node, then: npx skills add anthropics/skills --skill frontend-design)"
+    return 0
+  fi
+
+  echo ""
+  echo -e "${BOLD}Installing design skill (frontend-design)...${NC}"
+  if npx --yes skills@latest add anthropics/skills --skill frontend-design --agent claude-code --copy -y >/dev/null 2>&1; then
+    print_step "Installed: frontend-design skill (.claude/skills/) — bold, anti-AI-slop UI execution"
+  else
+    print_warn "Could not install frontend-design skill automatically — run later: npx skills add anthropics/skills --skill frontend-design"
+  fi
 }
 
 # ---- Hierarchical CLAUDE.md Generation ----
@@ -854,6 +952,18 @@ generate_architecture_config() {
     "master_file": "design-system/MASTER.md",
     "page_overrides": "design-system/pages/",
     "sources": ["shadcn/ui", "21st.dev"]
+  },
+  "compliance": {
+    "enabled": false,
+    "tier": "smb",
+    "geography": ["US"],
+    "regulated_data": [],
+    "privacy_policy_path": "docs/legal/privacy-policy.md",
+    "terms_path": "docs/legal/terms-of-service.md",
+    "subprocessors_path": "docs/legal/subprocessors.md",
+    "aup_path": "docs/legal/acceptable-use-policy.md",
+    "incident_response_path": "docs/compliance/incident-response.md",
+    "last_reviewed": null
   }
 }
 ARCHEOF
@@ -926,6 +1036,18 @@ ARCHEOF
     "master_file": "design-system/MASTER.md",
     "page_overrides": "design-system/pages/",
     "sources": ["shadcn/ui", "21st.dev"]
+  },
+  "compliance": {
+    "enabled": false,
+    "tier": "smb",
+    "geography": ["US"],
+    "regulated_data": [],
+    "privacy_policy_path": "docs/legal/privacy-policy.md",
+    "terms_path": "docs/legal/terms-of-service.md",
+    "subprocessors_path": "docs/legal/subprocessors.md",
+    "aup_path": "docs/legal/acceptable-use-policy.md",
+    "incident_response_path": "docs/compliance/incident-response.md",
+    "last_reviewed": null
   }
 }
 ARCHEOF
@@ -996,6 +1118,18 @@ ARCHEOF
     "master_file": "design-system/MASTER.md",
     "page_overrides": "design-system/pages/",
     "sources": ["shadcn/ui", "21st.dev"]
+  },
+  "compliance": {
+    "enabled": false,
+    "tier": "smb",
+    "geography": ["US"],
+    "regulated_data": [],
+    "privacy_policy_path": "docs/legal/privacy-policy.md",
+    "terms_path": "docs/legal/terms-of-service.md",
+    "subprocessors_path": "docs/legal/subprocessors.md",
+    "aup_path": "docs/legal/acceptable-use-policy.md",
+    "incident_response_path": "docs/compliance/incident-response.md",
+    "last_reviewed": null
   }
 }
 ARCHEOF
@@ -1073,6 +1207,18 @@ ARCHEOF
     "master_file": "design-system/MASTER.md",
     "page_overrides": "design-system/pages/",
     "sources": ["shadcn/ui", "21st.dev"]
+  },
+  "compliance": {
+    "enabled": false,
+    "tier": "smb",
+    "geography": ["US"],
+    "regulated_data": [],
+    "privacy_policy_path": "docs/legal/privacy-policy.md",
+    "terms_path": "docs/legal/terms-of-service.md",
+    "subprocessors_path": "docs/legal/subprocessors.md",
+    "aup_path": "docs/legal/acceptable-use-policy.md",
+    "incident_response_path": "docs/compliance/incident-response.md",
+    "last_reviewed": null
   }
 }
 ARCHEOF
@@ -1166,6 +1312,18 @@ ARCHEOF
     "master_file": "design-system/MASTER.md",
     "page_overrides": "design-system/pages/",
     "sources": ["shadcn/ui", "21st.dev"]
+  },
+  "compliance": {
+    "enabled": false,
+    "tier": "smb",
+    "geography": ["US"],
+    "regulated_data": [],
+    "privacy_policy_path": "docs/legal/privacy-policy.md",
+    "terms_path": "docs/legal/terms-of-service.md",
+    "subprocessors_path": "docs/legal/subprocessors.md",
+    "aup_path": "docs/legal/acceptable-use-policy.md",
+    "incident_response_path": "docs/compliance/incident-response.md",
+    "last_reviewed": null
   }
 }
 ARCHEOF
@@ -1269,12 +1427,15 @@ main() {
   local UPDATE_MODE=false
   FDD_FLAG=false
   NO_FDD_FLAG=false
+  NO_COMPLIANCE_FLAG=false
+  COMPLIANCE_ENABLED=false
 
   for arg in "$@"; do
     case "$arg" in
       --update) UPDATE_MODE=true ;;
       --fdd) FDD_FLAG=true ;;       # retained for back-compat (FDD is now default-on)
       --no-fdd) NO_FDD_FLAG=true ;;
+      --no-compliance) NO_COMPLIANCE_FLAG=true ;;
     esac
   done
 

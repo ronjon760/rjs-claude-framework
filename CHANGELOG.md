@@ -2,6 +2,51 @@
 
 All notable changes to RJ's Claude Framework.
 
+## [2.3.0] - 2026-05-29
+
+### Added
+
+- **Design lanes** — Three design tools now have clearly separated jobs: `/design` (DECIDE — owns `MASTER.md`), `frontend-design` skill (EXECUTE — bold, anti-AI-slop build-time craft), and `ui-ux-pro-max` skill (REFERENCE — on-demand catalog). New `templates/docs/design-lanes.md` ships to every project (copied by `setup.sh`) and documents the split.
+- **Auto-install of Anthropic's `frontend-design` skill** — `setup.sh` now runs a new `install_skills()` step that installs the official `frontend-design` skill project-level via the `skills` CLI. Non-fatal if Node/npx is missing; idempotent.
+- **Design Conviction block** — `/design` and the `MASTER.md` template now bake a single committed creative direction into `MASTER.md`, plus anti-generic guardrails (no Inter/Roboto/Arial defaults, no purple-on-white clichés, dominant tone + sharp accent, one high-impact motion moment). This is what keeps `frontend-design` from fighting the contract at build time.
+- **Custom easing curves** — `/design` and the `MASTER.md` template now ship three strong `cubic-bezier` tokens (`--ease-out`, `--ease-in-out`, `--ease-drawer`) instead of weak built-in easings, with a sub-300ms duration ceiling and a "never `ease-in` for UI" rule. Stagger gaps tightened 100ms → 60ms.
+
+### Changed
+
+- `/design` Phase 2 now prompts for a bold Design Conviction rather than a safe default; reference tables flag Inter/Geist as utility-only and steer toward distinctive display faces.
+- `CLAUDE.md` template References section now names the three design lanes and points to `docs/design-lanes.md`.
+- Framework version bumped to 2.3.0
+
+### Why
+
+The framework already had `/design` to pick a palette/fonts, but its tables steered toward *safe, conventional* choices — exactly what Anthropic's `frontend-design` skill is built to fight. Stacking both unmanaged meant they pulled opposite directions on the same project. This release resolves that by moving the bold "anti-AI-slop" conviction *upstream* into `/design` and `MASTER.md`, so the whole pipeline pulls one direction: decide boldly → record it in the contract → execute it faithfully. It also makes the official `frontend-design` skill a default install so every project gets distinctive, production-grade UI out of the box.
+
+---
+
+## [2.2.0] - 2026-05-28
+
+### Added
+
+- **Compliance Starter Kit** — New `templates/docs/compliance/` directory ships seven documents sized for small-business SaaS: a Privacy Policy template, Terms of Service template, Acceptable Use Policy template, subprocessor list template, one-page Incident Response plan template, a strategic compliance landscape reference, and a README index.
+- **`/compliance` slash command** — Interactive questionnaire that detects subprocessors from `.env.example` and dependencies, asks for legal entity / contact / governing state / data categories / AI use, then fills in the templates and writes them to `docs/legal/` and `docs/compliance/`. Updates `architecture.json compliance.last_reviewed`.
+- **SaaS-shape detection** — `lib/detect-stack.sh` now exports `IS_SAAS_STACK` (true for nextjs, nuxt, svelte, astro, gatsby, vite, CRA, express, django, fastapi, flask, react-native-expo). Used to gate compliance scaffolding.
+- **Opt-out compliance prompt in setup.sh** — On detected SaaS-shape projects, `setup.sh` now prompts `Generate compliance starter docs? [Y/n]` (defaulted to Y). On accept, copies the seven templates to `docs/compliance/` and `docs/legal/` and flips `architecture.json compliance.enabled` to true.
+- **`compliance` config in architecture.json** — New `compliance` section in every SaaS-shape generated architecture config tracks tier, geography, regulated data categories, doc paths, and last review date.
+- **CLAUDE.md Compliance section** — Generated `CLAUDE.md` now includes a short "Compliance (SMB tier)" section pointing at the kit and explaining when to update the subprocessor list and Privacy Policy.
+- **`--no-compliance` flag** — Power-user opt-out for `setup.sh`.
+
+### Changed
+
+- Slash command count in README updated from 11 to 12
+- "What gets generated" table now includes `docs/compliance/` and `docs/legal/`
+- Framework version bumped to 2.2.0
+
+### Why
+
+The framework already enforces structure (FDD), design (`/design`), and planning (`/vision`, `/buildplan`) — but every project still launched without a Privacy Policy, Terms of Service, or subprocessor list. SMB SaaS founders typically don't know where to start, end up using a Squarespace or template-generator Privacy Policy that doesn't match what their product actually does, and discover gaps only when a customer asks. This release makes the SMB-tier compliance floor (Privacy Policy + ToS + AUP + subprocessor list + IR plan) the default scaffold for any SaaS-shape project, with the option to refine via an interactive wizard. Higher tiers (mid-market DPA/MSA, enterprise SOC 2 prep, regulated HIPAA/PCI) are documented as future work and gated behind a `tier` field in `architecture.json`.
+
+---
+
 ## [2.1.0] - 2026-05-27
 
 ### Added

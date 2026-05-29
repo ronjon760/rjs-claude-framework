@@ -211,7 +211,7 @@ Hooks are grouped by **when they run**. Together, they form a pipeline: from the
 
 ---
 
-## The 11 slash commands, explained
+## The 12 slash commands, explained
 
 Commands are short instructions you type in Claude Code (starting with `/`) that trigger a pre-defined multi-step task. They're the things you'll do over and over — bundled so you don't have to spell them out each time.
 
@@ -219,6 +219,7 @@ Commands are short instructions you type in Claude Code (starting with `/`) that
 | ------------------------ | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------- |
 | **`/vision`**            | Walks you through defining your project's purpose, audience, tech stack, and phased roadmap. Writes `docs/VISION.md` so every session knows *what* you're building and *why*. | Starting a brand new project. The very first thing you run. | Once per project |
 | **`/design`**            | Walks you through creating a design system — style, colors, fonts, animations, component patterns — and writes `design-system/MASTER.md` so every session builds with the same visual language. | After `/vision`, or when you notice visual inconsistency. | Once per project, update as needed |
+| **`/compliance`**        | Walks you through filling in Privacy Policy, Terms of Service, AUP, subprocessor list, and a one-page incident response plan — sized for small-business SaaS. Records target tier and `last_reviewed` in `architecture.json`. | At launch, when adding a new third-party API, or every ~6 months to refresh. | Once per project, refresh ongoing |
 | **`/buildplan`**         | Reads your vision and design system, walks through user journeys, and generates phased build plans in `docs/plans/`. Phase 1 gets deep implementation detail; later phases get lighter outlines. | After `/vision` and `/design`. Creates the blueprint Claude builds from. | Once per project, refine as you go |
 | **`/welcome`**           | Reads the project files and gives you a friendly, plain-language tour: what this project is, how it's organized, what's automated, what to do first. | Your first time on a project, or onboarding a new collaborator.         | Once per person      |
 | **`/feature <name>`**    | Scaffolds a new feature folder following FDD rules: `components/`, `hooks/`, `types.ts`, `index.ts`, `QUICK_REF.md`, all wired together. | Whenever you start work on a brand-new feature.                          | A few times a week   |
@@ -318,9 +319,11 @@ The setup script detects which of these apply and only installs the relevant too
 | `.claude/architecture.json`    | FDD and architecture rules (file size limits, allowed import paths).   |
 | `.claude/.framework-version`   | Installed framework version, used by `/update`.                        |
 | `.claude/hooks/*.sh`           | The 16 hook scripts.                                                   |
-| `.claude/commands/*.md`        | The 11 slash command definitions.                                      |
+| `.claude/commands/*.md`        | The 12 slash command definitions.                                      |
 | `.claude/sessions/*.md`        | Auto-generated session logs (one per session).                         |
 | `.claude/backups/`             | Pre-update backups, created automatically by `/update` (gitignored).   |
+| `docs/compliance/`             | SMB-tier compliance reference and IR plan (only on SaaS-shape stacks). |
+| `docs/legal/`                  | Public legal templates: Privacy Policy, ToS, AUP, subprocessors (only on SaaS-shape stacks). |
 
 ---
 

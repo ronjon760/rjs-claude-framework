@@ -50,6 +50,14 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Do not skip TypeScript types — avoid `any` unless absolutely necessary
 - Do not put business logic in page.tsx or route.ts files
 
+## Compliance (SMB tier)
+This project ships with SMB-tier compliance starters under `docs/compliance/` and `docs/legal/` — a Privacy Policy, Terms of Service, Acceptable Use Policy, subprocessor list, and one-page incident response plan. The mental model and what's NOT included (DPA, MSA, SOC 2, HIPAA) is in `docs/compliance/compliance-landscape.md`.
+
+- Run `/compliance` to fill the templates with your specifics.
+- When you add a new third-party API or service, update `docs/legal/subprocessors.md` in the same PR.
+- When you add a new data category or feature, update `docs/legal/privacy-policy.md`.
+- Re-run `/compliance` every ~6 months to refresh `last_reviewed` in `architecture.json`.
+
 ## Communication Style
 - Write all commit messages, PR descriptions, and summaries in **plain language** that a non-technical person can understand.
 - Explain WHAT changed, WHY it matters, and WHAT it means for the project — not just technical details.
@@ -59,6 +67,7 @@ Copy `.env.example` to `.env.local` and fill in values.
 ## Commands
 - `/vision` — Define your project's vision, scope, and tech stack
 - `/design` — Create or update the project's design system
+- `/compliance` — Generate or update Privacy Policy, Terms, AUP, subprocessor list, IR plan
 - `/buildplan` — Generate a detailed build plan from your vision and design docs
 - `/feature <name>` — Scaffold a new feature folder with FDD structure
 - `/quickref <name>` — Generate or update documentation for a feature
@@ -76,6 +85,9 @@ Copy `.env.example` to `.env.local` and fill in values.
 - `PROJECT_LESSONS.md` — Corrections and learnings from past sessions
 - `.claude/architecture.json` — Architecture rules and boundaries
 - `docs/VISION.md` — Project vision, scope, and tech stack (run `/vision` to create)
-- `design-system/MASTER.md` — Design tokens and visual guidelines (run `/design` to create)
+- `design-system/MASTER.md` — Single source of truth for design (run `/design` to create)
+- `docs/design-lanes.md` — How the design tools divide work: `/design` (decide) → `MASTER.md` → `frontend-design` skill (execute) · `ui-ux-pro-max` skill (reference catalog)
 - `docs/plans/` — Build plans by phase (run `/buildplan` to create)
+- `docs/compliance/` — Compliance reference docs and IR plan (run `/compliance` to set up)
+- `docs/legal/` — Public-facing legal templates: Privacy Policy, ToS, AUP, subprocessors
 {{EXTRA_REFS}}
