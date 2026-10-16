@@ -67,10 +67,9 @@ bash "$FW/scripts/init-project.sh" --project "$PWD" "$@" || fail "Project setup 
 
 cat <<'NEXT'
 
-Next:
+All set. Next:
   1. Type: claude
-  2. Run /rjs:init — Claude finishes the setup with you (project summary, test runner, branch protection)
-  3. New project? Run /rjs:vision → /rjs:design → /rjs:buildplan
+  2. Run /rjs:init to finish setup with Claude
+  3. Starting fresh? Try /rjs:vision
 
-Turn on plugin auto-updates once: /plugin → Marketplaces → rjs-claude-framework → enable auto-update.
 NEXT
