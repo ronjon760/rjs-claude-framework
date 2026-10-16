@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  hooks:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]   # macOS runs the stock bash 3.2
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Hook and setup tests
+        run: /bin/bash tests/run.sh
+      - name: shellcheck
+        if: runner.os == 'Linux'
+        run: shellcheck -S warning hooks/scripts/*.sh scripts/*.sh setup.sh tests/run.sh
+
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install Claude Code
+        run: curl -fsSL https://claude.ai/install.sh | bash
+      - name: Validate plugin and marketplace
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          claude plugin validate --strict .claude-plugin/plugin.json
+          claude plugin validate --strict .

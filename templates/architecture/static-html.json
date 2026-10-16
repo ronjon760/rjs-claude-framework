@@ -1,0 +1,31 @@
+{
+  "stack": "static-html",
+  "rules": {
+    "max_file_lines": 1200,
+    "max_function_lines": 50,
+    "consistent_naming": true
+  },
+  "naming": {
+    "pages": "lowercase.html",
+    "images": "lowercase, descriptive",
+    "css_classes": "kebab-case"
+  },
+  "boundaries": {
+    "no_server_side_code": "Static hosting only — no backend logic",
+    "self_contained_pages": "Each HTML file should contain its own styles unless a shared CSS file exists"
+  },
+  "structure": {
+    "root": "HTML pages, images, and config files at project root"
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["CSS", "custom"]
+  }
+}

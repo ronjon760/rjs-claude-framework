@@ -1,0 +1,85 @@
+{
+  "stack": "react-native-expo",
+  "rules": {
+    "max_file_lines": 400,
+    "max_function_lines": 50,
+    "no_business_logic_in_screens": true,
+    "no_duplicate_stores": true,
+    "types_colocated": true,
+    "consistent_naming": true
+  },
+  "naming": {
+    "screens": "PascalCase ending in Screen (.tsx)",
+    "components": "PascalCase (.tsx)",
+    "hooks": "use*.ts",
+    "lib_modules": "camelCase (.ts)",
+    "tasks": "camelCase (.ts)",
+    "context": "PascalCase ending in Context (.tsx)"
+  },
+  "boundaries": {
+    "screens": "UI composition only — delegate to lib/ or feature hooks",
+    "components": "Reusable UI only — no direct Supabase/API calls, no business logic",
+    "lib": "Shared utilities and services — cannot import from screens/ or components/",
+    "navigation": "Route configuration only",
+    "context": "Thin wrappers around state"
+  },
+  "structure": {
+    "src/screens": "Screen components (one per app screen)",
+    "src/components": "Reusable UI components",
+    "src/lib": "Business logic, services, utilities",
+    "src/navigation": "React Navigation configuration",
+    "src/context": "React Context providers",
+    "src/tasks": "Background tasks",
+    "src/theme": "Theme constants"
+  },
+  "fdd": {
+    "enabled": false,
+    "features_dir": "src/features",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "components": "UI components for this feature",
+      "hooks": "Custom hooks for this feature",
+      "types.ts": "TypeScript types",
+      "index.ts": "Barrel export (public API)",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "api": "API/service calls (when logic grows)",
+      "utils": "Feature-specific utilities",
+      "handlers": "Event handlers extracted from components"
+    }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
+  },
+  "compliance": {
+    "enabled": false,
+    "tier": "smb",
+    "geography": ["US"],
+    "regulated_data": [],
+    "privacy_policy_path": "docs/legal/privacy-policy.md",
+    "terms_path": "docs/legal/terms-of-service.md",
+    "subprocessors_path": "docs/legal/subprocessors.md",
+    "aup_path": "docs/legal/acceptable-use-policy.md",
+    "incident_response_path": "docs/compliance/incident-response.md",
+    "last_reviewed": null
+  }
+}

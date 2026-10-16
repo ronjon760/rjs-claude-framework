@@ -1,93 +1,31 @@
 # {{PROJECT_NAME}}
 
-## Overview
-{{FRAMEWORK_DESC}} project using {{LANGUAGE_DESC}}.
+{{ONE_LINE_PURPOSE}}
 
-## Quick Start
-```bash
-{{INSTALL_CMD}}
-{{RUN_CMD}}
-```
+## Stack and commands
+- Stack: {{STACK}}
+- Install: `{{INSTALL_CMD}}`
+- Run locally: `{{RUN_CMD}}`
+- Test: `{{TEST_CMD}}`
 
-## Project Structure
-{{DIRECTORY_MAP}}
+## How we work
+- Keep changes small and focused on the request; mention unrelated problems instead of fixing them in passing.
+- Look for an existing helper, component, or pattern before creating a new one.
+- New behavior comes with a test that shows it works. Use `/rjs:test` for test-first work and `/verify` to check the running app.
+- Business logic lives in services and hooks, not in pages, routes, or components. Structure rules are in `.claude/architecture.json`; area-specific guidance is in `.claude/rules/`.
+- Record significant technical choices (database, auth, hosting, major libraries) with `/rjs:adr`.
+- Work on a branch, open a pull request with `/rjs:share`, and merge once CI is green.
 
-## Environment Variables
-Copy `.env.example` to `.env.local` and fill in values.
-{{ENV_VARS}}
+## Talking to the owner
+The person you're working with may not be technical. In summaries, commit messages, and pull requests, explain what changed, why it matters, and what it means for them, in plain language. Explain any technical term you can't avoid.
 
-## Architecture Principles
-- **Separation of concerns** — Pages/routes handle UI composition only. Business logic goes in services or hooks.
-- **No duplication** — If logic exists in 2+ places, extract to a shared module.
-- **Consistent patterns** — Follow the existing structure. Same type of code goes in the same type of place.
-- **Types co-located** — Define types near the code that uses them. Shared types go in lib/types.
-- **Search before creating** — Always check if a utility, component, or pattern already exists before building a new one.
-- See `.claude/architecture.json` for specific rules and boundaries.
+## Project docs
+- `docs/VISION.md` — goals, scope, users (`/rjs:vision`)
+- `design-system/MASTER.md` — visual design rules (`/rjs:design`)
+- `docs/plans/` — phased build plan (`/rjs:buildplan`)
+- `docs/decisions/` — decision records (`/rjs:adr`)
+- `.claude/rules/lessons.md` — corrections from past sessions; add to it when the owner corrects you
 
-## Behavioral Guidelines (Karpathy Principles)
-
-1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If multiple interpretations exist, present them. If a simpler approach exists, say so.
-
-2. **Simplicity First** — No features beyond what was asked. No abstractions for single-use code. If you write 200 lines and it could be 50, rewrite it. No error handling for impossible scenarios.
-
-3. **Surgical Changes** — Don't "improve" adjacent code, comments, or formatting. Match existing style. Every changed line traces directly to the request. Mention (don't delete) unrelated dead code.
-
-4. **Goal-Driven Execution** — Transform tasks into verifiable goals. Write tests first. For multi-step tasks, state a plan with verification checkpoints.
-{{FDD_SECTION}}
-
-## Conventions
-- Follow existing code patterns — search the codebase before creating new utilities
-- Keep components/modules small and focused (max ~400 lines per file)
-- Use the project's existing styling approach
-- API routes should be thin wrappers — business logic belongs in dedicated modules
-
-## Common Mistakes to Avoid
-- Do not weaken linting or formatting configs to suppress errors — fix the source code
-- Do not commit console.log, debugger, or print() statements
-- Do not hardcode API keys, tokens, or secrets — use environment variables
-- Do not modify files in node_modules/, .next/, dist/, or build/
-- Do not create new utility functions without first checking if one already exists
-- Do not skip TypeScript types — avoid `any` unless absolutely necessary
-- Do not put business logic in page.tsx or route.ts files
-
-## Compliance (SMB tier)
-This project ships with SMB-tier compliance starters under `docs/compliance/` and `docs/legal/` — a Privacy Policy, Terms of Service, Acceptable Use Policy, subprocessor list, and one-page incident response plan. The mental model and what's NOT included (DPA, MSA, SOC 2, HIPAA) is in `docs/compliance/compliance-landscape.md`.
-
-- Run `/compliance` to fill the templates with your specifics.
-- When you add a new third-party API or service, update `docs/legal/subprocessors.md` in the same PR.
-- When you add a new data category or feature, update `docs/legal/privacy-policy.md`.
-- Re-run `/compliance` every ~6 months to refresh `last_reviewed` in `architecture.json`.
-
-## Communication Style
-- Write all commit messages, PR descriptions, and summaries in **plain language** that a non-technical person can understand.
-- Explain WHAT changed, WHY it matters, and WHAT it means for the project — not just technical details.
-- Use simple analogies when helpful. Avoid jargon. If you must use a technical term, explain it in parentheses.
-- Structure summaries with: "What changed" → "Why we did it" → "What this means for you"
-
-## Commands
-- `/vision` — Define your project's vision, scope, and tech stack
-- `/design` — Create or update the project's design system
-- `/compliance` — Generate or update Privacy Policy, Terms, AUP, subprocessor list, IR plan
-- `/buildplan` — Generate a detailed build plan from your vision and design docs
-- `/feature <name>` — Scaffold a new feature folder with FDD structure
-- `/quickref <name>` — Generate or update documentation for a feature
-- `/test` — Write and run tests for your code (tests first, then implementation)
-- `/audit` — Check the project for code quality and architecture issues
-- `/save` — Save your work (commits and pushes to GitHub)
-- `/share` — Share your work for review (creates a pull request)
-
-## Session Workflow
-- Changes are auto-tracked in `.claude/sessions/`
-- You'll be reminded to save checkpoints after significant changes
-- Review `PROJECT_LESSONS.md` at the start of each session for past corrections
-
-## References
-- `PROJECT_LESSONS.md` — Corrections and learnings from past sessions
-- `.claude/architecture.json` — Architecture rules and boundaries
-- `docs/VISION.md` — Project vision, scope, and tech stack (run `/vision` to create)
-- `design-system/MASTER.md` — Single source of truth for design (run `/design` to create)
-- `docs/design-lanes.md` — How the design tools divide work: `/design` (decide) → `MASTER.md` → `frontend-design` skill (execute) · `ui-ux-pro-max` skill (reference catalog)
-- `docs/plans/` — Build plans by phase (run `/buildplan` to create)
-- `docs/compliance/` — Compliance reference docs and IR plan (run `/compliance` to set up)
-- `docs/legal/` — Public-facing legal templates: Privacy Policy, ToS, AUP, subprocessors
-{{EXTRA_REFS}}
+## Project-specific gotchas
+<!-- Things Claude would get wrong without being told. Keep each to one line.
+     Remove anything Claude already does correctly on its own. -->

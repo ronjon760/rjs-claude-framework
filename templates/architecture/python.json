@@ -1,0 +1,78 @@
+{
+  "stack": "python",
+  "rules": {
+    "max_file_lines": 400,
+    "max_function_lines": 50,
+    "no_business_logic_in_routes": true,
+    "types_colocated": true,
+    "consistent_naming": true
+  },
+  "naming": {
+    "modules": "snake_case (.py)",
+    "classes": "PascalCase",
+    "functions": "snake_case",
+    "constants": "UPPER_SNAKE_CASE"
+  },
+  "boundaries": {
+    "views_routes": "Thin wrappers — delegate to services",
+    "services": "Business logic — cannot import from views/routes",
+    "models": "Data models — cannot import from views or services"
+  },
+  "structure": {
+    "app or src": "Main application code",
+    "services": "Business logic layer",
+    "models": "Data models",
+    "utils": "Shared utilities",
+    "tests": "Test files"
+  },
+  "fdd": {
+    "enabled": false,
+    "features_dir": "features",
+    "required": {
+      "feature_folders": true,
+      "separated_concerns": true,
+      "quick_ref_per_feature": true,
+      "import_boundaries": true
+    },
+    "recommended": {
+      "service_extraction_threshold": 200,
+      "handler_pattern": true,
+      "utils_extraction": true
+    },
+    "feature_structure": {
+      "views": "View functions/classes for this feature",
+      "services": "Business logic for this feature",
+      "models": "Data models for this feature",
+      "types.py": "Type definitions",
+      "__init__.py": "Public API",
+      "QUICK_REF.md": "Feature documentation"
+    },
+    "recommended_structure": {
+      "utils": "Feature-specific utilities",
+      "serializers": "Data serialization"
+    }
+  },
+  "vision": {
+    "enabled": false,
+    "path": "docs/VISION.md"
+  },
+  "design_system": {
+    "enabled": false,
+    "path": "design-system/",
+    "master_file": "design-system/MASTER.md",
+    "page_overrides": "design-system/pages/",
+    "sources": ["shadcn/ui", "21st.dev"]
+  },
+  "compliance": {
+    "enabled": false,
+    "tier": "smb",
+    "geography": ["US"],
+    "regulated_data": [],
+    "privacy_policy_path": "docs/legal/privacy-policy.md",
+    "terms_path": "docs/legal/terms-of-service.md",
+    "subprocessors_path": "docs/legal/subprocessors.md",
+    "aup_path": "docs/legal/acceptable-use-policy.md",
+    "incident_response_path": "docs/compliance/incident-response.md",
+    "last_reviewed": null
+  }
+}

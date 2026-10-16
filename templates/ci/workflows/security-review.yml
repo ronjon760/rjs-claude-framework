@@ -1,0 +1,30 @@
+# Claude reviews each pull request for security problems and comments on it.
+# Needs a repository secret CLAUDE_API_KEY (an Anthropic API key with Claude Code
+# access). This uses API credit, separate from a Claude subscription.
+#
+# Anthropic: the action "is not hardened against prompt injection attacks and
+# should only be used to review trusted PRs" — so it only runs for pull requests
+# from branches in this repository, never from forks.
+name: Security review
+
+on:
+  pull_request:
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  security:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
+      # Pinned to a commit: this action publishes no releases.
+      - uses: anthropics/claude-code-security-review@0c6a49f1fa56a1d472575da86a94dbc1edb78eda
+        with:
+          comment-pr: true
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}

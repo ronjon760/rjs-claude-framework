@@ -21,7 +21,7 @@
   unexpected compositional moments per page.
 - Scattered micro-animations — prefer one well-orchestrated high-impact moment over many small ones.
 
-**See also:** `docs/design-lanes.md` for how `/design`, `frontend-design`, and
+**See also:** the framework's design-lanes guide (github.com/ronjon760/rjs-claude-framework/blob/main/templates/docs/design-lanes.md) for how `/rjs:design`, `frontend-design`, and
 `ui-ux-pro-max` divide responsibility.
 
 ---

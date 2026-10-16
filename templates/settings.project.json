@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Read(!.env.sample)",
+      "Read(!.env.template)",
+      "Read(.envrc)",
+      "Read(*.pem)",
+      "Read(*.key)",
+      "Read(*.p12)",
+      "Read(*.pfx)",
+      "Read(id_rsa)",
+      "Read(id_ed25519)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Edit(!.env.example)",
+      "Edit(!.env.sample)",
+      "Edit(!.env.template)"
+    ]
+  },
+  "cleanupPeriodDays": 90,
+  "extraKnownMarketplaces": {
+    "rjs-claude-framework": {
+      "source": { "source": "github", "repo": "ronjon760/rjs-claude-framework" },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "rjs@rjs-claude-framework": true
+  }
+}

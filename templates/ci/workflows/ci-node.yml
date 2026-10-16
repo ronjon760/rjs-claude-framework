@@ -1,0 +1,36 @@
+# Runs on every pull request and every push to main.
+# A pull request can only be trusted once this is green.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint --if-present
+      - name: Type check
+        run: |
+          if [ -f tsconfig.json ]; then npx tsc --noEmit; else echo "No tsconfig.json — skipping"; fi
+      - name: Tests
+        run: npm test --if-present
+        # Set a coverage threshold in your test config (vitest: test.coverage.thresholds,
+        # jest: coverageThreshold) so a drop in coverage fails this step.
+      - name: Build
+        run: npm run build --if-present
+      - name: Dependency vulnerabilities
+        run: npm audit --audit-level=high --omit=dev

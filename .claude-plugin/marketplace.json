@@ -1,0 +1,12 @@
+{
+  "name": "rjs-claude-framework",
+  "description": "RJ's Claude Framework — guardrails and workflows for new builders shipping enterprise-grade software",
+  "owner": { "name": "Ron", "url": "https://github.com/ronjon760" },
+  "plugins": [
+    {
+      "name": "rjs",
+      "source": "./",
+      "description": "Secret/git guards, verify-on-stop, automatic checkpoints, kickoff wizards (vision, design, build plan), review, ADRs and CI setup"
+    }
+  ]
+}

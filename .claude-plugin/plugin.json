@@ -1,0 +1,11 @@
+{
+  "name": "rjs",
+  "displayName": "RJ's Claude Framework",
+  "version": "3.0.0",
+  "description": "Guardrails and guided workflows for building enterprise-grade software with Claude Code: secret and git guards, verify-on-stop, automatic checkpoints, project kickoff wizards, review and CI setup.",
+  "author": { "name": "Ron", "url": "https://github.com/ronjon760" },
+  "homepage": "https://github.com/ronjon760/rjs-claude-framework",
+  "repository": "https://github.com/ronjon760/rjs-claude-framework",
+  "license": "MIT",
+  "keywords": ["guardrails", "beginners", "enterprise", "tdd", "ci", "security"]
+}

@@ -2,6 +2,56 @@
 
 All notable changes to RJ's Claude Framework.
 
+## [3.0.0] - 2026-10-16
+
+A rebuild on Claude Code's current platform. The full review behind it, with sources, is in `docs/reviews/2026-10-v3-review.md`.
+
+### Changed
+
+- **Now a Claude Code plugin.** Install with `/plugin install rjs --marketplace ronjon760/rjs-claude-framework`; updates come through `/plugin`. `setup.sh` is now a short bootstrap that installs the plugin and runs project setup.
+- **Commands are skills, namespaced `/rjs:`** (`/rjs:save`, `/rjs:vision`, …). No more clash with Claude Code's built-in `/design`. Long wizards (vision, design, buildplan, compliance) keep a short `SKILL.md` and load reference material only when needed. Wording rewritten for current models: calm instructions, no all-caps rules.
+- **Every hook now actually reaches Claude.** v2's warnings exited 0 and wrote to stderr, which Claude Code shows to no one. Hooks now reply in JSON (`additionalContext`, `permissionDecision`, `decision: "block"`, `systemMessage`).
+- **Hooks work from any folder** (`${CLAUDE_PLUGIN_ROOT}`, exec form) and on macOS's stock bash 3.2. Guards use `onFailure: "block"` so a crash blocks instead of allowing.
+- **Format → lint → structure checks run in one hook**, in order (v2 ran them in parallel, so lint could read a half-formatted file).
+- **Verify-on-stop** replaces the type-check and full-test-suite Stop hooks: it only runs when code changed since the last check, runs tests related to the changed files, and sends Claude back to fix failures — once, then tells you instead of looping.
+- **Desktop alerts** fire when Claude is waiting on you (`Notification` event), not after every reply.
+- **Config edits ask you** instead of printing an invisible warning.
+- **CLAUDE.md template** cut to the essentials; per-folder `CLAUDE.md` templates replaced by path-scoped `.claude/rules/` files. `PROJECT_LESSONS.md` replaced by `.claude/rules/lessons.md`, which loads every session.
+
+### Added
+
+- `/rjs:init` — per-project setup and v2 migration (CLAUDE.md, rules, permission deny rules for secret files, architecture config, `.gitignore`, `.env.example`, optional CI).
+- **CI templates** — lint, type check, tests, build and dependency audit (Node or Python), gitleaks secret scan, Dependabot, pull request template, optional Claude security review (same-repo PRs only).
+- **Git guard** — blocks `--no-verify`/`-n`/`core.hooksPath`, force-push to main, secrets and `.env` files in commits (including files a same-command `git add` stages) and debug statements; asks before `reset --hard`, `clean -f`, discard-everything checkouts, `branch -D` and other force-pushes.
+- **Automatic checkpoints** — uncommitted work is snapshotted to `refs/rjs-checkpoints/` when a session ends (never touches your branch, never pushed); `/rjs:checkpoints` lists and restores them.
+- `reviewer` agent — read-only, fresh-context review used by `/rjs:share`.
+- `/rjs:adr` — decision records in `docs/decisions/`.
+- Path-scoped rules for security, production readiness, Next.js, components, lib, stores, features and Python.
+- Per-check switches in `.claude/architecture.json` → `"checks"`.
+- `tests/run.sh` (57 cases) and a GitHub Actions workflow running it on Linux and macOS plus `claude plugin validate`.
+
+### Removed
+
+- Session logs (`.claude/sessions/`) and file-change tracking — Claude Code saves every conversation (`/resume`), `/rewind` undoes edits, and auto memory carries learnings forward. v2 started a new log on every startup, resume, clear and compact — mostly empty — and new projects committed them to git.
+- Plan-mode and "think before coding" reminders, and the "commit now" nudge (all invisible in v2 anyway).
+- `/update` and the version-check hook — the plugin system handles updates.
+- The unpinned `npx skills@latest` install of `frontend-design`; it's now recommended as Anthropic's official plugin.
+
+### Fixed
+
+- Secret guard blocked `.env.example` (while telling Claude to use it) and ordinary files such as `useCredentials.ts`; it missed `.envrc`, Windows paths and shell reads. Now exact-match patterns plus `permissions.deny` rules.
+- `grep -c … || echo 0` produced `0\n0` and broke numeric checks in several hooks; `audit.sh` aborted early under `set -e`.
+- Stack detection broke on folder names with spaces.
+- `--update` overwrote `.claude/settings.json`; settings are now merged.
+- `.gitignore` entries were only written when no `.gitignore` existed.
+- Hardcoded "Claude Opus 4.6" co-author line in `/save`.
+
+### Upgrading
+
+Run `/rjs:init` (or `setup.sh`) in each project. v2 files move to `.claude/backups/v2-<date>/`; your CLAUDE.md, architecture config and own settings are kept.
+
+---
+
 ## [2.3.0] - 2026-05-29
 
 ### Added
