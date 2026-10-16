@@ -90,16 +90,16 @@ check "settings has deny rules" yes "$(jq -e '.permissions.deny | index("Read(.e
 check "rerun keeps everything" 0 "$(bash "$FW/scripts/init-project.sh" | grep -c 'created')"
 V="$(mktemp -d "$WORK/v2.XXXX")"; cd "$V" && git init -q
 mkdir -p .claude/hooks .claude/commands .claude/sessions
-touch .claude/hooks/pre-security-guard.sh .claude/hooks/stop-test.sh .claude/hooks/my-pillars.sh .claude/commands/save.md; echo mine > .claude/commands/mine.md
-echo '{"permissions":{"allow":["Bash(npm test)"]},"hooks":{"Stop":[{"matcher":"","hooks":[{"type":"command","command":"bash .claude/hooks/stop-test.sh"}]}],"PostToolUse":[{"matcher":"Edit","hooks":[{"type":"command","command":"my-own-hook.sh"}]}],"SessionStart":[{"matcher":"","hooks":[{"type":"command","command":"bash .claude/hooks/my-pillars.sh"}]}]}}' > .claude/settings.json
+touch .claude/hooks/pre-security-guard.sh .claude/hooks/stop-test.sh .claude/hooks/my-custom-hook.sh .claude/commands/save.md; echo mine > .claude/commands/mine.md
+echo '{"permissions":{"allow":["Bash(npm test)"]},"hooks":{"Stop":[{"matcher":"","hooks":[{"type":"command","command":"bash .claude/hooks/stop-test.sh"}]}],"PostToolUse":[{"matcher":"Edit","hooks":[{"type":"command","command":"my-own-hook.sh"}]}],"SessionStart":[{"matcher":"","hooks":[{"type":"command","command":"bash .claude/hooks/my-custom-hook.sh"}]}]}}' > .claude/settings.json
 echo '{"version":"2.3.0"}' > .claude/.framework-version
 CLAUDE_PROJECT_DIR="$V" bash "$FW/scripts/init-project.sh" >/dev/null
 check "v2 hook files moved" no "$([ -f .claude/hooks/stop-test.sh ] && echo yes || echo no)"
-check "custom hook file kept" yes "$([ -f .claude/hooks/my-pillars.sh ] && echo yes)"
+check "custom hook file kept" yes "$([ -f .claude/hooks/my-custom-hook.sh ] && echo yes)"
 check "user command kept" yes "$([ -f .claude/commands/mine.md ] && echo yes)"
 check "user allow rule kept" "Bash(npm test)" "$(jq -r '.permissions.allow[0]' .claude/settings.json)"
 check "user hook kept" "my-own-hook.sh" "$(jq -r '.hooks.PostToolUse[0].hooks[0].command' .claude/settings.json)"
-check "custom .claude/hooks script kept" "bash .claude/hooks/my-pillars.sh" "$(jq -r '.hooks.SessionStart[0].hooks[0].command' .claude/settings.json)"
+check "custom .claude/hooks script kept" "bash .claude/hooks/my-custom-hook.sh" "$(jq -r '.hooks.SessionStart[0].hooks[0].command' .claude/settings.json)"
 check "v2 Stop hook removed" null "$(jq -r '.hooks.Stop' .claude/settings.json)"
 
 echo
