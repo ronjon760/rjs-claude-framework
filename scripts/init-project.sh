@@ -93,7 +93,7 @@ elif [ "$json_tool" = jq ]; then
     | .permissions.deny = (reduce ((($cur.permissions.deny) // []) + $tpl.permissions.deny)[] as $r
         ([]; if any(.[]; . == $r) then . else . + [$r] end))
     | if .hooks then
-        .hooks |= (with_entries(.value |= map(select(((.hooks // []) | map(.command // "") | any(test("\\.claude/hooks/[a-z-]+\\.sh"))) | not)))
+        .hooks |= (with_entries(.value |= map(select(((.hooks // []) | map(.command // "") | any(test("\\.claude/hooks/(post-architecture-check|post-console-warn|post-format|post-lint|post-session-track|pre-commit-quality|pre-config-protect|pre-fdd-guard|pre-security-guard|session-init|session-plan-reminder|stop-milestone|stop-notify|stop-test|stop-typecheck|version-check)\\.sh"))) | not)))
                    | with_entries(select(.value | length > 0)))
         | if (.hooks | length) == 0 then del(.hooks) else . end
       else . end
@@ -108,7 +108,7 @@ def merge(base, over):
     return base
 deny = cur.get("permissions", {}).get("deny", []) + [r for r in tpl["permissions"]["deny"] if r not in cur.get("permissions", {}).get("deny", [])]
 tpl["permissions"].pop("deny"); out = merge(tpl, cur); out.setdefault("permissions", {})["deny"] = deny
-old = re.compile(r"\.claude/hooks/[a-z-]+\.sh")
+old = re.compile(r"\.claude/hooks/(post-architecture-check|post-console-warn|post-format|post-lint|post-session-track|pre-commit-quality|pre-config-protect|pre-fdd-guard|pre-security-guard|session-init|session-plan-reminder|stop-milestone|stop-notify|stop-test|stop-typecheck|version-check)\.sh")
 if "hooks" in out:
     for ev in list(out["hooks"]):
         out["hooks"][ev] = [g for g in out["hooks"][ev] if not any(old.search(h.get("command", "")) for h in g.get("hooks", []))]
